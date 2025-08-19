@@ -1,0 +1,35 @@
+{
+    "name": "HealthVerse",
+    "short_name": "HealthVerse",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#0175C2",
+    "theme_color": "#0175C2",
+    "description": "Healthverse – Your Personal Health & Wellness Companion Healthverse is not just another fitness or health app — it’s the gateway to your complete wellbeing, designed as part of the Appverse ecosystem. From tracking your daily health stats to connecting with your family’s wellness, It brings everything into one smart, simple, and powerful app.",
+    "orientation": "portrait-primary",
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/Icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}
