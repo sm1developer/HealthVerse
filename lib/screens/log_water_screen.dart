@@ -222,46 +222,41 @@ class _LogWaterScreenState extends State<LogWaterScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _VolumeTile(
-                          label: '250 ml',
-                          icon: Icons.local_drink, // glass
-                          onAdd: () => _addWater(250),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _VolumeTile(
-                          label: '500 ml',
-                          icon: Icons.sports_bar, // bottle/mug
-                          onAdd: () => _addWater(500),
-                        ),
-                      ),
-                    ],
+                  Expanded(
+                    child: ListView.separated(
+                      itemCount: 4,
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      itemBuilder: (context, index) {
+                        switch (index) {
+                          case 0:
+                            return _VolumeTile(
+                              label: '250 ml',
+                              icon: Icons.local_drink,
+                              onAdd: () => _addWater(250),
+                            );
+                          case 1:
+                            return _VolumeTile(
+                              label: '500 ml',
+                              icon: Icons.sports_bar,
+                              onAdd: () => _addWater(500),
+                            );
+                          case 2:
+                            return _VolumeTile(
+                              label: '1000 ml',
+                              icon: Icons.water,
+                              onAdd: () => _addWater(1000),
+                            );
+                          default:
+                            return _VolumeTile(
+                              label: 'Custom',
+                              icon: Icons.edit,
+                              onAdd: _addCustom,
+                            );
+                        }
+                      },
+                    ),
                   ),
                   const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _VolumeTile(
-                          label: '1000 ml',
-                          icon: Icons.water, // big bottle/drop
-                          onAdd: () => _addWater(1000),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _VolumeTile(
-                          label: 'Custom',
-                          icon: Icons.edit,
-                          onAdd: _addCustom,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Spacer(),
                   FilledButton(
                     onPressed: _save,
                     style: FilledButton.styleFrom(
@@ -278,7 +273,7 @@ class _LogWaterScreenState extends State<LogWaterScreen>
                     child: Text(
                       'Save',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w400,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
@@ -316,10 +311,19 @@ class _VolumeTile extends StatelessWidget {
               child: Text(
                 label,
                 style: Theme.of(context).textTheme.titleMedium,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
             FilledButton.tonalIcon(
               onPressed: onAdd,
+              style: FilledButton.styleFrom(
+                minimumSize: const Size(0, 40),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                shape: const StadiumBorder(),
+              ),
               icon: const Icon(Icons.add),
               label: const Text('Add'),
             ),
