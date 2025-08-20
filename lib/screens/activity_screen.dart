@@ -7,8 +7,11 @@ import '../state/workout_store.dart';
 import '../models/workout.dart';
 import 'package:hive/hive.dart';
 import 'log_water_screen.dart';
+import 'log_food_screen.dart';
 import '../state/water_store.dart';
 import '../models/water_log.dart';
+import '../state/food_store.dart';
+import '../models/food_log.dart';
 
 class ActivityScreen extends StatefulWidget {
   const ActivityScreen({super.key});
@@ -54,6 +57,14 @@ class _ActivityScreenState extends State<ActivityScreen> {
       ).push(MaterialPageRoute(builder: (_) => const LogWaterScreen()));
       return;
     }
+    if (action == 'Log Food') {
+      setState(() => _expanded = false);
+      if (!mounted) return;
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => const LogFoodScreen()));
+      return;
+    }
     // Other actions placeholder
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(action)));
     setState(() => _expanded = false);
@@ -86,6 +97,20 @@ class _ActivityScreenState extends State<ActivityScreen> {
         children: [
           // Combined activities: workouts and water logs
           _ActivityFeed(tileBg: tileBg, outline: outline),
+          // Dim background when menu is expanded and close on tap
+          if (isExpanded)
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: () => setState(() => _expanded = false),
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 150),
+                  opacity: 1.0,
+                  child: Container(
+                    color: colorScheme.scrim.withValues(alpha: 0.35),
+                  ),
+                ),
+              ),
+            ),
           Positioned(
             right: 16,
             bottom: 16 + viewPadding.bottom,
@@ -167,21 +192,30 @@ class _ActivityItem {
   _ActivityItem.workout(Workout w)
     : workout = w,
       water = null,
+      food = null,
       type = _ActivityType.workout,
       time = w.startedAt;
   _ActivityItem.water(WaterLog l)
     : water = l,
       workout = null,
+      food = null,
       type = _ActivityType.water,
       time = l.loggedAt;
+  _ActivityItem.food(FoodLog f)
+    : food = f,
+      workout = null,
+      water = null,
+      type = _ActivityType.food,
+      time = f.loggedAt;
 
   final _ActivityType type;
   final Workout? workout;
   final WaterLog? water;
+  final FoodLog? food;
   final DateTime time;
 }
 
-enum _ActivityType { workout, water }
+enum _ActivityType { workout, water, food }
 
 class _ActivityFeed extends StatelessWidget {
   const _ActivityFeed({required this.tileBg, required this.outline});
@@ -199,86 +233,131 @@ class _ActivityFeed extends StatelessWidget {
         return ValueListenableBuilder(
           valueListenable: listenableWater,
           builder: (context, Box<WaterLog> waterBox, __) {
-            final List<_ActivityItem> items = <_ActivityItem>[
-              ...wBox.values.toList().cast<Workout>().map(
-                (w) => _ActivityItem.workout(w),
-              ),
-              ...waterBox.values.toList().cast<WaterLog>().map(
-                (l) => _ActivityItem.water(l),
-              ),
-            ]..sort((a, b) => b.time.compareTo(a.time));
+            final listenableFood = FoodStore.instance.listenable!;
+            return ValueListenableBuilder(
+              valueListenable: listenableFood,
+              builder: (context, Box<FoodLog> foodBox, ___) {
+                final List<_ActivityItem> items = <_ActivityItem>[
+                  ...wBox.values.toList().cast<Workout>().map(
+                    (w) => _ActivityItem.workout(w),
+                  ),
+                  ...waterBox.values.toList().cast<WaterLog>().map(
+                    (l) => _ActivityItem.water(l),
+                  ),
+                  ...foodBox.values.toList().cast<FoodLog>().map(
+                    (f) => _ActivityItem.food(f),
+                  ),
+                ]..sort((a, b) => b.time.compareTo(a.time));
 
-            return ListView.builder(
-              padding: const EdgeInsets.only(
-                bottom: 120,
-                left: 16,
-                right: 16,
-                top: 8,
-              ),
-              itemCount: items.length,
-              itemBuilder: (context, index) {
-                final _ActivityItem item = items[index];
-                if (item.type == _ActivityType.workout) {
-                  final Workout w = item.workout!;
-                  final String hh = w.elapsed.inHours.toString().padLeft(
-                    2,
-                    '0',
-                  );
-                  final String mm = w.elapsed.inMinutes
-                      .remainder(60)
-                      .toString()
-                      .padLeft(2, '0');
-                  final String ss = w.elapsed.inSeconds
-                      .remainder(60)
-                      .toString()
-                      .padLeft(2, '0');
-                  final DateTime dt = w.startedAt;
-                  final int rawH = dt.hour % 12;
-                  final int hr12 = rawH == 0 ? 12 : rawH;
-                  final String min = dt.minute.toString().padLeft(2, '0');
-                  final String meridiem = dt.hour < 12 ? 'AM' : 'PM';
-                  final String time12 =
-                      '${hr12.toString().padLeft(2, '0')}:$min $meridiem';
-                  return Card(
-                    color: tileBg,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(color: outline.withValues(alpha: 0.6)),
-                    ),
-                    margin: const EdgeInsets.symmetric(vertical: 6),
-                    child: ListTile(
-                      leading: const Icon(Icons.fitness_center),
-                      title: Text(w.activity),
-                      subtitle: Text('Time: $hh:$mm:$ss  •  Steps: ${w.steps}'),
-                      trailing: Text(time12),
-                    ),
-                  );
-                } else {
-                  final WaterLog l = item.water!;
-                  final DateTime dt = l.loggedAt;
-                  final int rawH = dt.hour % 12;
-                  final int hr12 = rawH == 0 ? 12 : rawH;
-                  final String min = dt.minute.toString().padLeft(2, '0');
-                  final String meridiem = dt.hour < 12 ? 'AM' : 'PM';
-                  final String time12 =
-                      '${hr12.toString().padLeft(2, '0')}:$min $meridiem';
-                  return Card(
-                    color: tileBg,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(color: outline.withValues(alpha: 0.6)),
-                    ),
-                    margin: const EdgeInsets.symmetric(vertical: 6),
-                    child: ListTile(
-                      leading: const Icon(Icons.water_drop),
-                      title: const Text('Water'),
-                      subtitle: Text('Added: ${l.amountMl} ml'),
-                      trailing: Text(time12),
-                    ),
-                  );
-                }
+                return ListView.builder(
+                  padding: const EdgeInsets.only(
+                    bottom: 120,
+                    left: 16,
+                    right: 16,
+                    top: 8,
+                  ),
+                  itemCount: items.length,
+                  itemBuilder: (context, index) {
+                    final _ActivityItem item = items[index];
+                    if (item.type == _ActivityType.workout) {
+                      final Workout w = item.workout!;
+                      final String hh = w.elapsed.inHours.toString().padLeft(
+                        2,
+                        '0',
+                      );
+                      final String mm = w.elapsed.inMinutes
+                          .remainder(60)
+                          .toString()
+                          .padLeft(2, '0');
+                      final String ss = w.elapsed.inSeconds
+                          .remainder(60)
+                          .toString()
+                          .padLeft(2, '0');
+                      final DateTime dt = w.startedAt;
+                      final int rawH = dt.hour % 12;
+                      final int hr12 = rawH == 0 ? 12 : rawH;
+                      final String min = dt.minute.toString().padLeft(2, '0');
+                      final String meridiem = dt.hour < 12 ? 'AM' : 'PM';
+                      final String time12 =
+                          '${hr12.toString().padLeft(2, '0')}:$min $meridiem';
+                      return Card(
+                        color: tileBg,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: BorderSide(
+                            color: outline.withValues(alpha: 0.6),
+                          ),
+                        ),
+                        margin: const EdgeInsets.symmetric(vertical: 6),
+                        child: ListTile(
+                          leading: const Icon(Icons.fitness_center),
+                          title: Text(w.activity),
+                          subtitle: Text(
+                            'Time: $hh:$mm:$ss  •  Steps: ${w.steps}',
+                          ),
+                          trailing: Text(time12),
+                        ),
+                      );
+                    } else if (item.type == _ActivityType.water) {
+                      final WaterLog l = item.water!;
+                      final DateTime dt = l.loggedAt;
+                      final int rawH = dt.hour % 12;
+                      final int hr12 = rawH == 0 ? 12 : rawH;
+                      final String min = dt.minute.toString().padLeft(2, '0');
+                      final String meridiem = dt.hour < 12 ? 'AM' : 'PM';
+                      final String time12 =
+                          '${hr12.toString().padLeft(2, '0')}:$min $meridiem';
+                      return Card(
+                        color: tileBg,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: BorderSide(
+                            color: outline.withValues(alpha: 0.6),
+                          ),
+                        ),
+                        margin: const EdgeInsets.symmetric(vertical: 6),
+                        child: ListTile(
+                          leading: const Icon(Icons.water_drop),
+                          title: const Text('Water'),
+                          subtitle: Text('Added: ${l.amountMl} ml'),
+                          trailing: Text(time12),
+                        ),
+                      );
+                    } else {
+                      final FoodLog f = item.food!;
+                      final DateTime dt = f.loggedAt;
+                      final int rawH = dt.hour % 12;
+                      final int hr12 = rawH == 0 ? 12 : rawH;
+                      final String min = dt.minute.toString().padLeft(2, '0');
+                      final String meridiem = dt.hour < 12 ? 'AM' : 'PM';
+                      final String time12 =
+                          '${hr12.toString().padLeft(2, '0')}:$min $meridiem';
+                      return Card(
+                        color: tileBg,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: BorderSide(
+                            color: outline.withValues(alpha: 0.6),
+                          ),
+                        ),
+                        margin: const EdgeInsets.symmetric(vertical: 6),
+                        child: ListTile(
+                          leading: const Icon(Icons.restaurant),
+                          title: Text(f.name),
+                          subtitle: Text(
+                            (f.details == null || f.details!.isEmpty)
+                                ? 'Amount: ${f.quantity} ${f.unit}'
+                                : f.details!,
+                          ),
+                          trailing: Text(time12),
+                        ),
+                      );
+                    }
+                  },
+                );
               },
             );
           },

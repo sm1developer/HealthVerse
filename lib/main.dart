@@ -5,6 +5,7 @@ import 'screens/activity_screen.dart';
 import 'package:flutter/services.dart';
 import 'state/workout_store.dart';
 import 'state/water_store.dart';
+import 'state/food_store.dart';
 import 'state/user_store.dart';
 import 'screens/onboarding_screen.dart';
 
@@ -37,6 +38,7 @@ class _BootState extends State<Boot> {
     await WorkoutStore.instance.init();
     await UserStore.instance.init();
     await WaterStore.instance.init();
+    await FoodStore.instance.init();
   }
 
   @override
