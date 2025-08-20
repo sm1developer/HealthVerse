@@ -1,6 +1,6 @@
-# healthverse
+# HealthVerse
 
-A new Flutter project.
+Healthverse – Your Personal Health & Wellness Companion Healthverse is not just another fitness or health app — it’s the gateway to your complete wellbeing, designed as part of the Appverse ecosystem. From tracking your daily health stats to connecting with your family’s wellness, It brings everything into one smart, simple, and powerful app.
 
 ## Getting Started
 

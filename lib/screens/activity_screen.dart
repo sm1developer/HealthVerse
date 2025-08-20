@@ -6,6 +6,9 @@ import 'dart:io' show Platform;
 import '../state/workout_store.dart';
 import '../models/workout.dart';
 import 'package:hive/hive.dart';
+import 'log_water_screen.dart';
+import '../state/water_store.dart';
+import '../models/water_log.dart';
 
 class ActivityScreen extends StatefulWidget {
   const ActivityScreen({super.key});
@@ -43,7 +46,15 @@ class _ActivityScreenState extends State<ActivityScreen> {
       setState(() {});
       return;
     }
-    if (!mounted) return;
+    if (action == 'Log Water') {
+      setState(() => _expanded = false);
+      if (!mounted) return;
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => const LogWaterScreen()));
+      return;
+    }
+    // Other actions placeholder
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(action)));
     setState(() => _expanded = false);
   }
@@ -73,63 +84,8 @@ class _ActivityScreenState extends State<ActivityScreen> {
       appBar: AppBar(title: const Text('Activity')),
       body: Stack(
         children: [
-          // Saved workouts list backed by Hive listenable
-          ValueListenableBuilder<Box<Workout>>(
-            valueListenable: WorkoutStore.instance.listenable!,
-            builder: (context, box, _) {
-              final List<Workout> list = box.values
-                  .toList()
-                  .cast<Workout>()
-                  .reversed
-                  .toList();
-              return ListView.builder(
-                padding: const EdgeInsets.only(
-                  bottom: 120,
-                  left: 16,
-                  right: 16,
-                  top: 8,
-                ),
-                itemCount: list.length,
-                itemBuilder: (context, index) {
-                  final Workout w = list[index];
-                  final String hh = w.elapsed.inHours.toString().padLeft(
-                    2,
-                    '0',
-                  );
-                  final String mm = w.elapsed.inMinutes
-                      .remainder(60)
-                      .toString()
-                      .padLeft(2, '0');
-                  final String ss = w.elapsed.inSeconds
-                      .remainder(60)
-                      .toString()
-                      .padLeft(2, '0');
-                  final DateTime dt = w.startedAt;
-                  final int rawH = dt.hour % 12;
-                  final int hr12 = rawH == 0 ? 12 : rawH;
-                  final String min = dt.minute.toString().padLeft(2, '0');
-                  final String meridiem = dt.hour < 12 ? 'AM' : 'PM';
-                  final String time12 =
-                      '${hr12.toString().padLeft(2, '0')}:$min $meridiem';
-                  return Card(
-                    color: tileBg,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(color: outline.withValues(alpha: 0.6)),
-                    ),
-                    margin: const EdgeInsets.symmetric(vertical: 6),
-                    child: ListTile(
-                      leading: const Icon(Icons.fitness_center),
-                      title: Text(w.activity),
-                      subtitle: Text('Time: $hh:$mm:$ss  •  Steps: ${w.steps}'),
-                      trailing: Text(time12),
-                    ),
-                  );
-                },
-              );
-            },
-          ),
+          // Combined activities: workouts and water logs
+          _ActivityFeed(tileBg: tileBg, outline: outline),
           Positioned(
             right: 16,
             bottom: 16 + viewPadding.bottom,
@@ -203,6 +159,131 @@ class _ActivityScreenState extends State<ActivityScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ActivityItem {
+  _ActivityItem.workout(Workout w)
+    : workout = w,
+      water = null,
+      type = _ActivityType.workout,
+      time = w.startedAt;
+  _ActivityItem.water(WaterLog l)
+    : water = l,
+      workout = null,
+      type = _ActivityType.water,
+      time = l.loggedAt;
+
+  final _ActivityType type;
+  final Workout? workout;
+  final WaterLog? water;
+  final DateTime time;
+}
+
+enum _ActivityType { workout, water }
+
+class _ActivityFeed extends StatelessWidget {
+  const _ActivityFeed({required this.tileBg, required this.outline});
+
+  final Color tileBg;
+  final Color outline;
+
+  @override
+  Widget build(BuildContext context) {
+    final listenableWorkout = WorkoutStore.instance.listenable!;
+    final listenableWater = WaterStore.instance.listenable!;
+    return ValueListenableBuilder(
+      valueListenable: listenableWorkout,
+      builder: (context, Box<Workout> wBox, _) {
+        return ValueListenableBuilder(
+          valueListenable: listenableWater,
+          builder: (context, Box<WaterLog> waterBox, __) {
+            final List<_ActivityItem> items = <_ActivityItem>[
+              ...wBox.values.toList().cast<Workout>().map(
+                (w) => _ActivityItem.workout(w),
+              ),
+              ...waterBox.values.toList().cast<WaterLog>().map(
+                (l) => _ActivityItem.water(l),
+              ),
+            ]..sort((a, b) => b.time.compareTo(a.time));
+
+            return ListView.builder(
+              padding: const EdgeInsets.only(
+                bottom: 120,
+                left: 16,
+                right: 16,
+                top: 8,
+              ),
+              itemCount: items.length,
+              itemBuilder: (context, index) {
+                final _ActivityItem item = items[index];
+                if (item.type == _ActivityType.workout) {
+                  final Workout w = item.workout!;
+                  final String hh = w.elapsed.inHours.toString().padLeft(
+                    2,
+                    '0',
+                  );
+                  final String mm = w.elapsed.inMinutes
+                      .remainder(60)
+                      .toString()
+                      .padLeft(2, '0');
+                  final String ss = w.elapsed.inSeconds
+                      .remainder(60)
+                      .toString()
+                      .padLeft(2, '0');
+                  final DateTime dt = w.startedAt;
+                  final int rawH = dt.hour % 12;
+                  final int hr12 = rawH == 0 ? 12 : rawH;
+                  final String min = dt.minute.toString().padLeft(2, '0');
+                  final String meridiem = dt.hour < 12 ? 'AM' : 'PM';
+                  final String time12 =
+                      '${hr12.toString().padLeft(2, '0')}:$min $meridiem';
+                  return Card(
+                    color: tileBg,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: outline.withValues(alpha: 0.6)),
+                    ),
+                    margin: const EdgeInsets.symmetric(vertical: 6),
+                    child: ListTile(
+                      leading: const Icon(Icons.fitness_center),
+                      title: Text(w.activity),
+                      subtitle: Text('Time: $hh:$mm:$ss  •  Steps: ${w.steps}'),
+                      trailing: Text(time12),
+                    ),
+                  );
+                } else {
+                  final WaterLog l = item.water!;
+                  final DateTime dt = l.loggedAt;
+                  final int rawH = dt.hour % 12;
+                  final int hr12 = rawH == 0 ? 12 : rawH;
+                  final String min = dt.minute.toString().padLeft(2, '0');
+                  final String meridiem = dt.hour < 12 ? 'AM' : 'PM';
+                  final String time12 =
+                      '${hr12.toString().padLeft(2, '0')}:$min $meridiem';
+                  return Card(
+                    color: tileBg,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: outline.withValues(alpha: 0.6)),
+                    ),
+                    margin: const EdgeInsets.symmetric(vertical: 6),
+                    child: ListTile(
+                      leading: const Icon(Icons.water_drop),
+                      title: const Text('Water'),
+                      subtitle: Text('Added: ${l.amountMl} ml'),
+                      trailing: Text(time12),
+                    ),
+                  );
+                }
+              },
+            );
+          },
+        );
+      },
     );
   }
 }
