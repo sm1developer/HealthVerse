@@ -44,6 +44,12 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSMotionUsageDescription</key>
+	<string>This app uses motion data to detect and track your workouts.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>This app may read motion/step data to track workouts.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>This app may write workout data.</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.appverse.healthverse</string>
 </dict>
