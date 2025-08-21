@@ -8,6 +8,7 @@ import 'state/water_store.dart';
 import 'state/food_store.dart';
 import 'state/user_store.dart';
 import 'screens/onboarding_screen.dart';
+import 'widgets/frosted.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -103,8 +104,8 @@ class _RootNavState extends State<RootNav> {
       label: 'Dashboard',
     ),
     NavigationDestination(
-      icon: Icon(Icons.fitness_center_outlined),
-      selectedIcon: Icon(Icons.fitness_center),
+      icon: Icon(Icons.history),
+      selectedIcon: Icon(Icons.history),
       label: 'Activity',
     ),
   ];
@@ -116,8 +117,8 @@ class _RootNavState extends State<RootNav> {
       label: Text('Dashboard'),
     ),
     NavigationRailDestination(
-      icon: Icon(Icons.fitness_center_outlined),
-      selectedIcon: Icon(Icons.fitness_center),
+      icon: Icon(Icons.history),
+      selectedIcon: Icon(Icons.history),
       label: Text('Activity'),
     ),
   ];
@@ -132,37 +133,43 @@ class _RootNavState extends State<RootNav> {
             body: Row(
               children: [
                 SafeArea(
-                  child: NavigationRail(
-                    extended: true,
-                    leading: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                      child: Row(
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: Image.asset(
-                              'assets/icons/app_icon_dark.png',
-                              width: 44,
-                              height: 44,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stack) =>
-                                  const Icon(Icons.health_and_safety, size: 24),
+                  child: FrostedWrap(
+                    child: NavigationRail(
+                      extended: true,
+                      backgroundColor: Colors.transparent,
+                      leading: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                        child: Row(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: Image.asset(
+                                'assets/icons/app_icon_dark.png',
+                                width: 44,
+                                height: 44,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stack) =>
+                                    const Icon(
+                                      Icons.health_and_safety,
+                                      size: 24,
+                                    ),
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            'HealthVerse',
-                            style: Theme.of(context).textTheme.titleLarge
-                                ?.copyWith(fontWeight: FontWeight.w700),
-                          ),
-                        ],
+                            const SizedBox(width: 10),
+                            Text(
+                              'HealthVerse',
+                              style: Theme.of(context).textTheme.titleLarge
+                                  ?.copyWith(fontWeight: FontWeight.w700),
+                            ),
+                          ],
+                        ),
                       ),
+                      selectedIndex: _currentIndex,
+                      onDestinationSelected: (i) =>
+                          setState(() => _currentIndex = i),
+                      labelType: NavigationRailLabelType.none,
+                      destinations: _railDestinations,
                     ),
-                    selectedIndex: _currentIndex,
-                    onDestinationSelected: (i) =>
-                        setState(() => _currentIndex = i),
-                    labelType: NavigationRailLabelType.none,
-                    destinations: _railDestinations,
                   ),
                 ),
                 const VerticalDivider(width: 1),
@@ -183,10 +190,13 @@ class _RootNavState extends State<RootNav> {
   Widget _buildBottomScaffold(BuildContext context) {
     return Scaffold(
       body: _screens[_currentIndex],
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
-        onDestinationSelected: (i) => setState(() => _currentIndex = i),
-        destinations: _navDestinations,
+      bottomNavigationBar: FrostedWrap(
+        child: NavigationBar(
+          backgroundColor: Colors.transparent,
+          selectedIndex: _currentIndex,
+          onDestinationSelected: (i) => setState(() => _currentIndex = i),
+          destinations: _navDestinations,
+        ),
       ),
     );
   }
@@ -196,14 +206,16 @@ class _RootNavState extends State<RootNav> {
       body: Row(
         children: [
           SafeArea(
-            child: NavigationRail(
-              extended: extended,
-              selectedIndex: _currentIndex,
-              onDestinationSelected: (i) => setState(() => _currentIndex = i),
-              labelType: extended
-                  ? NavigationRailLabelType.none
-                  : NavigationRailLabelType.all,
-              destinations: _railDestinations,
+            child: FrostedWrap(
+              child: NavigationRail(
+                extended: extended,
+                selectedIndex: _currentIndex,
+                onDestinationSelected: (i) => setState(() => _currentIndex = i),
+                labelType: extended
+                    ? NavigationRailLabelType.none
+                    : NavigationRailLabelType.all,
+                destinations: _railDestinations,
+              ),
             ),
           ),
           const VerticalDivider(width: 1),

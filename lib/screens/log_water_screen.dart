@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../state/water_store.dart';
 import '../models/water_log.dart';
+import '../widgets/frosted.dart';
 
 class LogWaterScreen extends StatefulWidget {
   const LogWaterScreen({super.key});
@@ -74,17 +75,29 @@ class _LogWaterScreenState extends State<LogWaterScreen>
 
   void _save() {
     if (_totalMl <= 0) {
+      final double screenWidth = MediaQuery.sizeOf(context).width;
+      final double hMargin = screenWidth > 392 ? (screenWidth - 360) / 2 : 16;
+      final onError = Theme.of(context).colorScheme.onErrorContainer;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please add water before saving.')),
+        SnackBar(
+          content: Text(
+            'Please add water before saving.',
+            style: TextStyle(color: onError),
+          ),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Theme.of(context).colorScheme.errorContainer,
+          margin: EdgeInsets.only(
+            left: hMargin,
+            right: hMargin,
+            bottom: MediaQuery.viewPaddingOf(context).bottom + 86,
+          ),
+        ),
       );
       return;
     }
     WaterStore.instance.add(
       WaterLog(amountMl: _totalMl, loggedAt: DateTime.now()),
     );
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Saved ${_totalMl} ml')));
     Navigator.of(context).maybePop();
   }
 
@@ -98,12 +111,18 @@ class _LogWaterScreenState extends State<LogWaterScreen>
   Widget build(BuildContext context) {
     final ColorScheme scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(title: const Text('Log Water')),
+      appBar: AppBar(
+        title: const Text('Log Water'),
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        flexibleSpace: const FrostedBarBackground(),
+      ),
       body: Column(
         children: [
           // Top half box similar to Track Workout
           SizedBox(
-            height: 340,
+            height: 300,
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Card(
@@ -111,9 +130,12 @@ class _LogWaterScreenState extends State<LogWaterScreen>
                 color: scheme.surfaceContainerHighest,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
+                  side: BorderSide(
+                    color: scheme.outlineVariant.withValues(alpha: 0.6),
+                  ),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(28),
+                  padding: const EdgeInsets.all(20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -130,7 +152,7 @@ class _LogWaterScreenState extends State<LogWaterScreen>
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 8),
                       Expanded(
                         child: Center(
                           child: FittedBox(
@@ -140,8 +162,8 @@ class _LogWaterScreenState extends State<LogWaterScreen>
                               children: [
                                 // Animated glass fill
                                 SizedBox(
-                                  width: 90,
-                                  height: 120,
+                                  width: 84,
+                                  height: 110,
                                   child: AnimatedBuilder(
                                     animation: _fillAnim,
                                     builder: (context, _) {
@@ -152,8 +174,8 @@ class _LogWaterScreenState extends State<LogWaterScreen>
                                           Align(
                                             alignment: Alignment.bottomCenter,
                                             child: Container(
-                                              width: 70,
-                                              height: 100 * _fillAnim.value,
+                                              width: 64,
+                                              height: 92 * _fillAnim.value,
                                               decoration: BoxDecoration(
                                                 color: scheme.primary
                                                     .withValues(alpha: 0.65),
@@ -175,8 +197,8 @@ class _LogWaterScreenState extends State<LogWaterScreen>
                                           ),
                                           // Glass outline + icon hint
                                           Container(
-                                            width: 70,
-                                            height: 100,
+                                            width: 64,
+                                            height: 92,
                                             decoration: BoxDecoration(
                                               border: Border.all(
                                                 color: scheme.outline,
@@ -191,7 +213,7 @@ class _LogWaterScreenState extends State<LogWaterScreen>
                                     },
                                   ),
                                 ),
-                                const SizedBox(height: 14),
+                                const SizedBox(height: 10),
                                 Text(
                                   '${_totalMl} ml',
                                   style: Theme.of(context)
@@ -199,7 +221,7 @@ class _LogWaterScreenState extends State<LogWaterScreen>
                                       .displayMedium
                                       ?.copyWith(fontWeight: FontWeight.w700),
                                 ),
-                                const SizedBox(height: 6),
+                                const SizedBox(height: 4),
                                 Text(
                                   'added today',
                                   style: Theme.of(context).textTheme.labelLarge,
@@ -225,7 +247,7 @@ class _LogWaterScreenState extends State<LogWaterScreen>
                   Expanded(
                     child: ListView.separated(
                       itemCount: 4,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      separatorBuilder: (_, __) => const SizedBox(height: 6),
                       itemBuilder: (context, index) {
                         switch (index) {
                           case 0:
@@ -256,25 +278,25 @@ class _LogWaterScreenState extends State<LogWaterScreen>
                       },
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  FilledButton(
-                    onPressed: _save,
-                    style: FilledButton.styleFrom(
-                      shape: const StadiumBorder(),
-                      minimumSize: const Size.fromHeight(66),
-                      padding: const EdgeInsets.symmetric(vertical: 20),
-                      backgroundColor: Theme.of(
-                        context,
-                      ).colorScheme.primaryContainer,
-                      foregroundColor: Theme.of(
-                        context,
-                      ).colorScheme.onPrimaryContainer,
-                    ),
-                    child: Text(
-                      'Save',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
+                  const SizedBox(height: 8),
+                  SafeArea(
+                    top: false,
+                    left: false,
+                    right: false,
+                    bottom: true,
+                    minimum: const EdgeInsets.only(bottom: 8),
+                    child: FilledButton(
+                      onPressed: _save,
+                      style: FilledButton.styleFrom(
+                        shape: const StadiumBorder(),
+                        minimumSize: const Size.fromHeight(72),
+                        padding: const EdgeInsets.symmetric(vertical: 26),
+                        textStyle: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w400,
+                        ),
                       ),
+                      child: const Text('Save'),
                     ),
                   ),
                 ],
@@ -299,10 +321,13 @@ class _VolumeTile extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return Card(
       elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.6)),
+      ),
       color: scheme.surfaceContainerHigh,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
             Icon(icon ?? Icons.local_drink, color: scheme.primary),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../state/food_store.dart';
 import '../models/food_log.dart';
+import '../widgets/frosted.dart';
 
 class LogFoodScreen extends StatefulWidget {
   const LogFoodScreen({super.key});
@@ -24,16 +25,23 @@ class _LogFoodScreenState extends State<LogFoodScreen> {
   }
 
   void _save() {
-    if (!(_formKey.currentState?.validate() ?? false)) return;
     final String name = _foodCtrl.text.trim();
     final String qty = _qtyCtrl.text.trim();
     final String unit = _unit;
     final double quantity = double.tryParse(qty) ?? 0;
-    if (name.isEmpty && _entries.isEmpty) return;
+    final bool hasDraft = name.isNotEmpty;
+    if (hasDraft) {
+      if (!(_formKey.currentState?.validate() ?? false)) return;
+    } else if (_entries.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Add at least one food item.')),
+      );
+      return;
+    }
 
     // Build list of items (include current fields if valid)
     final List<_FoodEntry> items = List<_FoodEntry>.from(_entries);
-    if (name.isNotEmpty && quantity > 0) {
+    if (hasDraft && quantity > 0) {
       items.add(_FoodEntry(name: name, unit: unit, quantity: quantity));
     }
     if (items.isEmpty) return;
@@ -58,9 +66,6 @@ class _LogFoodScreenState extends State<LogFoodScreen> {
         details: details,
       ),
     );
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Saved ${items.length} food item(s)')),
-    );
     Navigator.of(context).maybePop();
   }
 
@@ -81,7 +86,13 @@ class _LogFoodScreenState extends State<LogFoodScreen> {
   Widget build(BuildContext context) {
     final ColorScheme scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(title: const Text('Log Food')),
+      appBar: AppBar(
+        title: const Text('Log Food'),
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        flexibleSpace: const FrostedBarBackground(),
+      ),
       body: Column(
         children: [
           Expanded(
@@ -97,6 +108,9 @@ class _LogFoodScreenState extends State<LogFoodScreen> {
                       color: scheme.surfaceContainerHighest,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(
+                          color: scheme.outlineVariant.withValues(alpha: 0.6),
+                        ),
                       ),
                       child: Padding(
                         padding: const EdgeInsets.all(16),
@@ -130,6 +144,9 @@ class _LogFoodScreenState extends State<LogFoodScreen> {
                       color: scheme.surfaceContainerHigh,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(
+                          color: scheme.outlineVariant.withValues(alpha: 0.6),
+                        ),
                       ),
                       child: Padding(
                         padding: const EdgeInsets.all(16),
@@ -223,6 +240,9 @@ class _LogFoodScreenState extends State<LogFoodScreen> {
                         color: scheme.surfaceContainerHighest,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
+                          side: BorderSide(
+                            color: scheme.outlineVariant.withValues(alpha: 0.6),
+                          ),
                         ),
                         child: Padding(
                           padding: const EdgeInsets.all(12),
@@ -262,24 +282,26 @@ class _LogFoodScreenState extends State<LogFoodScreen> {
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: FilledButton(
-              onPressed: _save,
-              style: FilledButton.styleFrom(
-                shape: const StadiumBorder(),
-                minimumSize: const Size.fromHeight(66),
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                foregroundColor: Theme.of(
-                  context,
-                ).colorScheme.onPrimaryContainer,
-              ),
-              child: Text(
-                'Save',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+          SafeArea(
+            top: false,
+            left: false,
+            right: false,
+            bottom: true,
+            minimum: const EdgeInsets.only(bottom: 8),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: FilledButton(
+                onPressed: _save,
+                style: FilledButton.styleFrom(
+                  shape: const StadiumBorder(),
+                  minimumSize: const Size.fromHeight(72),
+                  padding: const EdgeInsets.symmetric(vertical: 26),
+                  textStyle: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                child: const Text('Save'),
               ),
             ),
           ),

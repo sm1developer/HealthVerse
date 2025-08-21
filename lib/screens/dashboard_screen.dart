@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import '../state/user_store.dart';
+import '../widgets/frosted.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -27,6 +28,10 @@ class DashboardScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        flexibleSpace: const FrostedBarBackground(),
         titleSpacing: 16,
         actions: [
           IconButton(
@@ -139,7 +144,7 @@ class DashboardScreen extends StatelessWidget {
                 Expanded(
                   child: _MetricCard(
                     color: blend(scheme.surface, scheme.errorContainer, 0.20),
-                    icon: Icons.fitness_center,
+                    icon: Icons.directions_walk,
                     iconColor: scheme.onErrorContainer,
                     title: 'Workout',
                     primaryValue: '45',

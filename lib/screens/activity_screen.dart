@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:permission_handler/permission_handler.dart';
 import 'track_workout_screen.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -6,6 +7,7 @@ import 'dart:io' show Platform;
 import '../state/workout_store.dart';
 import '../models/workout.dart';
 import 'package:hive/hive.dart';
+import '../widgets/frosted.dart';
 import 'log_water_screen.dart';
 import 'log_food_screen.dart';
 import '../state/water_store.dart';
@@ -31,9 +33,19 @@ class _ActivityScreenState extends State<ActivityScreen> {
         final status = await Permission.activityRecognition.request();
         if (!(status.isGranted || status.isLimited)) {
           if (!mounted) return;
+          final double screenWidth = MediaQuery.sizeOf(context).width;
+          final double hMargin = screenWidth > 392
+              ? (screenWidth - 360) / 2
+              : 16;
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Permission required to track workouts.'),
+            SnackBar(
+              content: const Text('Permission required to track workouts.'),
+              behavior: SnackBarBehavior.floating,
+              margin: EdgeInsets.only(
+                left: hMargin,
+                right: hMargin,
+                bottom: MediaQuery.viewPaddingOf(context).bottom + 86,
+              ),
             ),
           );
           return;
@@ -66,7 +78,19 @@ class _ActivityScreenState extends State<ActivityScreen> {
       return;
     }
     // Other actions placeholder
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(action)));
+    final double screenWidth = MediaQuery.sizeOf(context).width;
+    final double hMargin = screenWidth > 392 ? (screenWidth - 360) / 2 : 16;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(action),
+        behavior: SnackBarBehavior.floating,
+        margin: EdgeInsets.only(
+          left: hMargin,
+          right: hMargin,
+          bottom: MediaQuery.viewPaddingOf(context).bottom + 86,
+        ),
+      ),
+    );
     setState(() => _expanded = false);
   }
 
@@ -92,7 +116,13 @@ class _ActivityScreenState extends State<ActivityScreen> {
     );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Activity')),
+      appBar: AppBar(
+        title: const Text('Activity'),
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        flexibleSpace: const FrostedBarBackground(),
+      ),
       body: Stack(
         children: [
           // Combined activities: workouts and water logs
@@ -103,7 +133,8 @@ class _ActivityScreenState extends State<ActivityScreen> {
               child: GestureDetector(
                 onTap: () => setState(() => _expanded = false),
                 child: AnimatedOpacity(
-                  duration: const Duration(milliseconds: 150),
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOut,
                   opacity: 1.0,
                   child: Container(
                     color: colorScheme.scrim.withValues(alpha: 0.35),
@@ -118,35 +149,40 @@ class _ActivityScreenState extends State<ActivityScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
+                // Staggered animated menu options
                 AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
-                  transitionBuilder: (child, anim) => FadeTransition(
-                    opacity: anim,
-                    child: SizeTransition(
-                      sizeFactor: anim,
-                      axisAlignment: -1,
-                      child: child,
-                    ),
-                  ),
+                  duration: const Duration(milliseconds: 220),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  transitionBuilder: (child, anim) {
+                    return FadeTransition(
+                      opacity: anim,
+                      child: SizeTransition(
+                        sizeFactor: anim,
+                        axisAlignment: -1,
+                        child: child,
+                      ),
+                    );
+                  },
                   child: !isExpanded
                       ? const SizedBox.shrink()
                       : Column(
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            Align(
-                              alignment: Alignment.centerRight,
+                            _StaggeredOption(
+                              delay: 0,
                               child: FilledButton.tonalIcon(
                                 style: pillStyle,
                                 onPressed: () =>
                                     _onActionSelected('Track Workout'),
-                                icon: const Icon(Icons.fitness_center),
+                                icon: const Icon(Icons.directions_walk),
                                 label: const Text('Track Workout'),
                               ),
                             ),
                             const SizedBox(height: spacing),
-                            Align(
-                              alignment: Alignment.centerRight,
+                            _StaggeredOption(
+                              delay: 50,
                               child: FilledButton.tonalIcon(
                                 style: pillStyle,
                                 onPressed: () => _onActionSelected('Log Food'),
@@ -155,8 +191,8 @@ class _ActivityScreenState extends State<ActivityScreen> {
                               ),
                             ),
                             const SizedBox(height: spacing),
-                            Align(
-                              alignment: Alignment.centerRight,
+                            _StaggeredOption(
+                              delay: 100,
                               child: FilledButton.tonalIcon(
                                 style: pillStyle,
                                 onPressed: () => _onActionSelected('Log Water'),
@@ -184,6 +220,52 @@ class _ActivityScreenState extends State<ActivityScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _StaggeredOption extends StatefulWidget {
+  const _StaggeredOption({required this.child, required this.delay});
+
+  final Widget child;
+  final int delay; // ms
+
+  @override
+  State<_StaggeredOption> createState() => _StaggeredOptionState();
+}
+
+class _StaggeredOptionState extends State<_StaggeredOption> {
+  bool _start = false;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer(Duration(milliseconds: widget.delay), () {
+      if (!mounted) return;
+      setState(() => _start = true);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: _start ? 1 : 0),
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, _) {
+        return Transform.translate(
+          offset: Offset(0, (1 - value) * 10),
+          child: Opacity(opacity: value, child: widget.child),
+        );
+      },
+      child: widget.child,
     );
   }
 }
@@ -291,7 +373,7 @@ class _ActivityFeed extends StatelessWidget {
                         ),
                         margin: const EdgeInsets.symmetric(vertical: 6),
                         child: ListTile(
-                          leading: const Icon(Icons.fitness_center),
+                          leading: const Icon(Icons.directions_walk),
                           title: Text(w.activity),
                           subtitle: Text(
                             'Time: $hh:$mm:$ss  •  Steps: ${w.steps}',

@@ -6,6 +6,7 @@ import 'package:pedometer/pedometer.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io' show Platform;
 import 'package:permission_handler/permission_handler.dart';
+import '../widgets/frosted.dart';
 
 class TrackWorkoutScreen extends StatefulWidget {
   const TrackWorkoutScreen({super.key});
@@ -129,22 +130,31 @@ class _TrackWorkoutScreenState extends State<TrackWorkoutScreen> {
     final ColorScheme scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Track Workout')),
+      appBar: AppBar(
+        title: const Text('Track Workout'),
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        flexibleSpace: const FrostedBarBackground(),
+      ),
       body: Column(
         children: [
           // Top metrics (timer placeholder + steps)
           SizedBox(
-            height: 340,
+            height: 320,
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Card(
                 elevation: 0,
-                color: scheme.surfaceVariant.withOpacity(0.25),
+                color: scheme.surfaceContainerHighest,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
+                  side: BorderSide(
+                    color: scheme.outlineVariant.withValues(alpha: 0.6),
+                  ),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -184,7 +194,7 @@ class _TrackWorkoutScreenState extends State<TrackWorkoutScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       // Steps
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -222,7 +232,7 @@ class _TrackWorkoutScreenState extends State<TrackWorkoutScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      tileColor: scheme.surfaceVariant.withOpacity(0.2),
+                      tileColor: Theme.of(context).colorScheme.surface,
                       leading: Icon(_activityIcons[_activity] ?? Icons.flag),
                       title: Text(_activity),
                       trailing: FilledButton.tonalIcon(
@@ -363,6 +373,10 @@ class _ActivityPickerPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Choose activity'),
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        flexibleSpace: const FrostedBarBackground(),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, current),
