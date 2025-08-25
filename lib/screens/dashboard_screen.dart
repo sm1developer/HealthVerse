@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import '../state/user_store.dart';
@@ -227,9 +226,9 @@ class _MetricCard extends StatelessWidget {
                   Text(
                     primaryValue,
                     style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: onColor,
-                    ),
+                          fontWeight: FontWeight.w800,
+                          color: onColor,
+                        ),
                   ),
                   if (secondary != null) ...[
                     const SizedBox(width: 6),

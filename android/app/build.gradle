@@ -1,0 +1,101 @@
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+    id 'dev.flutter.flutter-gradle-plugin'
+}
+
+android {
+    namespace "com.appverse.healthverse"
+    compileSdk 36
+    ndkVersion "27.0.12077973"
+
+    // Signing configuration for release builds
+    signingConfigs {
+        release {
+            storeFile file('upload-keystore.jks')
+            storePassword 'healthverse123'
+            keyAlias 'upload'
+            keyPassword 'healthverse123'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+
+    kotlinOptions {
+        jvmTarget = '11'
+    }
+
+    defaultConfig {
+        applicationId "com.appverse.healthverse"
+        minSdkVersion flutter.minSdkVersion
+        targetSdk 35
+        versionCode flutter.versionCode
+        versionName flutter.versionName
+        multiDexEnabled true
+    }
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            
+            // Basic optimization without minification to avoid missing class issues
+            minifyEnabled false
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+
+            // Conservative optimization
+            debuggable false
+            jniDebuggable false
+            renderscriptDebuggable false
+            pseudoLocalesEnabled false
+            zipAlignEnabled true
+
+            // Optimize native libraries
+            ndk {
+                debugSymbolLevel 'NONE'
+            }
+        }
+        debug {
+            minifyEnabled false
+            shrinkResources false
+            debuggable true
+        }
+    }
+
+    // Universal APK configuration
+    splits {
+        abi {
+            enable false
+        }
+    }
+
+    // Optimize packaging
+    packagingOptions {
+        resources {
+            excludes += [
+                'META-INF/DEPENDENCIES',
+                'META-INF/LICENSE',
+                'META-INF/LICENSE.txt',
+                'META-INF/license.txt',
+                'META-INF/NOTICE',
+                'META-INF/NOTICE.txt',
+                'META-INF/notice.txt',
+                'META-INF/ASL2.0',
+                'META-INF/*.kotlin_module',
+                'META-INF/*.version',
+                'META-INF/maven/**',
+                'META-INF/proguard/**',
+                'META-INF/services/**',
+                'META-INF/versions/**',
+                'META-INF/versions/9/previous-compilation-data.bin'
+            ]
+        }
+    }
+}
+
+flutter {
+    source '../..'
+}

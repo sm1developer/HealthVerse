@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="fill_parent" android:paddingHorizontal="26.0dip" android:paddingVertical="18.0dip"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:layout_width="fill_parent" android:layout_height="42.0dip">
+        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="?android:textColorSecondary" android:layout_width="0.0dip" android:layout_height="wrap_content" android:text="@string/colorPickerDialog_hue" android:layout_weight="1.0" android:textAllCaps="true" />
+        <androidx.appcompat.widget.AppCompatSeekBar android:theme="@style/Widget.AppCompat.SeekBar" android:id="@id/hue" android:layout_width="0.0dip" android:layout_height="fill_parent" android:max="360" android:progress="0" android:layout_weight="4.0" />
+        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="?android:textColorSecondary" android:ellipsize="none" android:gravity="end" android:id="@id/hueInt" android:layout_width="0.0dip" android:layout_height="wrap_content" android:text="0" android:singleLine="true" android:layout_weight="1.0" android:textAllCaps="true" />
+    </LinearLayout>
+    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:layout_width="fill_parent" android:layout_height="42.0dip">
+        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="?android:textColorSecondary" android:layout_width="0.0dip" android:layout_height="wrap_content" android:text="@string/colorPickerDialog_saturation" android:layout_weight="1.0" android:textAllCaps="true" />
+        <androidx.appcompat.widget.AppCompatSeekBar android:theme="@style/Widget.AppCompat.SeekBar" android:id="@id/saturation" android:layout_width="0.0dip" android:layout_height="fill_parent" android:max="255" android:progress="0" android:layout_weight="4.0" />
+        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="?android:textColorSecondary" android:ellipsize="none" android:gravity="end" android:id="@id/saturationInt" android:layout_width="0.0dip" android:layout_height="wrap_content" android:text="0" android:singleLine="true" android:layout_weight="1.0" android:textAllCaps="true" />
+    </LinearLayout>
+    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:layout_width="fill_parent" android:layout_height="42.0dip">
+        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="?android:textColorSecondary" android:layout_width="0.0dip" android:layout_height="wrap_content" android:text="@string/colorPickerDialog_brightness" android:layout_weight="1.0" android:textAllCaps="true" />
+        <androidx.appcompat.widget.AppCompatSeekBar android:theme="@style/Widget.AppCompat.SeekBar" android:id="@id/brightness" android:layout_width="0.0dip" android:layout_height="fill_parent" android:max="255" android:progress="0" android:layout_weight="4.0" />
+        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="?android:textColorSecondary" android:ellipsize="none" android:gravity="end" android:id="@id/brightnessInt" android:layout_width="0.0dip" android:layout_height="wrap_content" android:text="0" android:singleLine="true" android:layout_weight="1.0" android:textAllCaps="true" />
+    </LinearLayout>
+    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/alphaLayout" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="42.0dip">
+        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="?android:textColorSecondary" android:layout_width="0.0dip" android:layout_height="wrap_content" android:text="@string/colorPickerDialog_alpha" android:layout_weight="1.0" android:textAllCaps="true" />
+        <androidx.appcompat.widget.AppCompatSeekBar android:theme="@style/Widget.AppCompat.SeekBar" android:id="@id/alpha" android:layout_width="0.0dip" android:layout_height="fill_parent" android:max="255" android:progress="255" android:layout_weight="4.0" />
+        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="?android:textColorSecondary" android:ellipsize="none" android:gravity="end" android:id="@id/alphaInt" android:layout_width="0.0dip" android:layout_height="wrap_content" android:text="1.0" android:singleLine="true" android:layout_weight="1.0" android:textAllCaps="true" />
+    </LinearLayout>
+</LinearLayout>

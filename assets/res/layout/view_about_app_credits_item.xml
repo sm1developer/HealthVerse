@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:id="@id/container" android:background="@drawable/bg_container_mid" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginHorizontal="16.0dip"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout android:orientation="horizontal" android:id="@id/clickable_container" android:background="?selectableItemBackgroundBorderless" android:clickable="true" android:layout_width="fill_parent" android:layout_height="wrap_content" android:paddingHorizontal="22.0dip" android:paddingVertical="16.0dip">
+        <ImageView android:layout_gravity="center" android:id="@id/image" android:layout_width="48.0dip" android:layout_height="48.0dip" android:importantForAccessibility="no" android:layout_marginEnd="16.0dip" />
+        <LinearLayout android:gravity="start|center" android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="fill_parent">
+            <com.google.android.material.textview.MaterialTextView android:textColor="?colorOnSurface" android:id="@id/title" android:layout_width="wrap_content" android:layout_height="wrap_content" style="?textAppearanceTitleSmall" />
+            <com.google.android.material.textview.MaterialTextView android:textColor="?colorOnSurface" android:id="@id/desc" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2.0dip" android:alpha="0.8" style="?textAppearanceBodySmall" />
+        </LinearLayout>
+    </LinearLayout>
+    <View android:id="@id/divider" android:background="?colorSurface" android:layout_width="fill_parent" android:layout_height="1.0dip" android:layout_marginHorizontal="@dimen/container_margin_horizontal" />
+</LinearLayout>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView android:id="@id/container" android:clickable="true" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginBottom="@dimen/container_margin_bottom" android:layout_marginHorizontal="@dimen/container_margin_horizontal" app:cardBackgroundColor="?colorSurfaceContainer" app:cardMaxElevation="0.0dip" app:strokeWidth="0.0dip"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <LinearLayout android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_centerVertical="true" android:paddingHorizontal="22.0dip" android:paddingVertical="16.0dip">
+        <LinearLayout android:orientation="horizontal" android:layout_width="fill_parent" android:layout_height="wrap_content">
+            <ImageView android:layout_gravity="center" android:id="@id/icon" android:layout_width="20.0dip" android:layout_height="20.0dip" android:src="@drawable/ic_attach_file" android:contentDescription="@string/icon" android:layout_marginEnd="16.0dip" app:tint="?colorPrimary" />
+            <LinearLayout android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="wrap_content">
+                <com.google.android.material.textview.MaterialTextView android:textColor="?colorOnSurface" android:layout_gravity="start|center" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/backup_restore_title" style="?textAppearanceTitleSmall" />
+                <com.google.android.material.textview.MaterialTextView android:textColor="?colorOnSurface" android:layout_gravity="start|center" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2.0dip" android:text="@string/backup_restore_desc" android:alpha="0.8" style="?textAppearanceBodySmall" />
+            </LinearLayout>
+        </LinearLayout>
+        <LinearLayout android:orientation="horizontal" android:id="@id/backup_restore_buttons" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginTop="12.0dip" android:weightSum="2.0">
+            <com.google.android.material.button.MaterialButton android:id="@id/backup" android:layout_width="0.0dip" android:layout_height="fill_parent" android:text="@string/backup" android:layout_weight="1.0" android:layout_marginEnd="6.0dip" app:cornerRadius="@dimen/default_corner_radius" app:icon="@drawable/ic_backup" app:iconGravity="textStart" />
+            <com.google.android.material.button.MaterialButton android:id="@id/restore" android:layout_width="0.0dip" android:layout_height="fill_parent" android:text="@string/restore" android:layout_weight="1.0" android:layout_marginStart="6.0dip" app:cornerRadius="@dimen/default_corner_radius" app:icon="@drawable/ic_restore" app:iconGravity="textStart" />
+        </LinearLayout>
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

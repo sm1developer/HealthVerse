@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView android:id="@id/container" android:clickable="true" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginBottom="@dimen/container_margin_bottom" android:layout_marginHorizontal="@dimen/container_margin_horizontal" app:cardBackgroundColor="?colorPrimaryContainer" app:cardMaxElevation="0.0dip" app:strokeWidth="0.0dip"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <LinearLayout android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="16.0dip">
+        <com.google.android.material.textview.MaterialTextView android:textStyle="bold" android:textColor="?colorOnPrimaryContainer" android:layout_gravity="start|center" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="@string/note_title" android:justificationMode="inter_word" style="?textAppearanceBodyMedium" />
+        <com.google.android.material.textview.MaterialTextView android:textColor="?colorOnPrimaryContainer" android:layout_gravity="start|center" android:id="@id/warning_text" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginTop="6.0dip" android:alpha="0.8" android:layout_marginEnd="6.0dip" android:justificationMode="inter_word" style="?textAppearanceBodySmall" />
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

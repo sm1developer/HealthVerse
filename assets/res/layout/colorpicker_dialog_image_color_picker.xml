@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView android:layout_width="fill_parent" android:layout_height="fill_parent" app:cardBackgroundColor="?colorSurface" app:cardCornerRadius="8.0dip" app:strokeWidth="0.0dip"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <androidx.constraintlayout.widget.ConstraintLayout android:layout_width="fill_parent" android:layout_height="fill_parent">
+        <me.jfenn.colorpickerdialog.views.picker.ImageColorPickerView android:id="@id/image" android:layout_width="fill_parent" android:layout_height="wrap_content" android:scaleType="fitXY" android:adjustViewBounds="true" android:minWidth="300.0dip" app:layout_constraintBottom_toTopOf="@id/button_container" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" />
+        <LinearLayout android:orientation="horizontal" android:id="@id/button_container" android:layout_width="0.0dip" android:layout_height="64.0dip" android:paddingHorizontal="16.0dip" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintHorizontal_bias="0.0">
+            <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="?android:textColorPrimary" android:layout_gravity="center_vertical" android:id="@id/cancel" android:background="?selectableItemBackground" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@android:string/cancel" android:textAllCaps="true" android:paddingHorizontal="12.0dip" android:paddingVertical="8.0dip" />
+            <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="?android:textColorPrimary" android:layout_gravity="center_vertical" android:id="@id/confirm" android:background="?selectableItemBackground" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@android:string/ok" android:textAllCaps="true" android:paddingHorizontal="12.0dip" android:paddingVertical="8.0dip" />
+        </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>

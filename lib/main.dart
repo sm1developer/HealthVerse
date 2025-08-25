@@ -9,6 +9,8 @@ import 'state/food_store.dart';
 import 'state/user_store.dart';
 import 'screens/onboarding_screen.dart';
 import 'widgets/frosted.dart';
+import 'state/sleep_tips_store.dart';
+import 'state/sleep_store.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,6 +42,8 @@ class _BootState extends State<Boot> {
     await UserStore.instance.init();
     await WaterStore.instance.init();
     await FoodStore.instance.init();
+    await SleepTipsStore.instance.init();
+    await SleepStore.instance.init();
   }
 
   @override
@@ -66,8 +70,7 @@ class MyApp extends StatelessWidget {
         final Color seed = Colors.teal;
         final ColorScheme lightScheme =
             lightDynamic ?? ColorScheme.fromSeed(seedColor: seed);
-        final ColorScheme darkScheme =
-            darkDynamic ??
+        final ColorScheme darkScheme = darkDynamic ??
             ColorScheme.fromSeed(seedColor: seed, brightness: Brightness.dark);
 
         return MaterialApp(
@@ -94,34 +97,39 @@ class RootNav extends StatefulWidget {
 
 class _RootNavState extends State<RootNav> {
   int _currentIndex = 0;
+  final ValueNotifier<bool> _globalDim = ValueNotifier<bool>(false);
+  final ValueNotifier<Widget?> _floatingLayer = ValueNotifier<Widget?>(null);
 
-  final List<Widget> _screens = const [DashboardScreen(), ActivityScreen()];
+  late final List<Widget> _screens = [
+    const DashboardScreen(),
+    ActivityScreen(dimmer: _globalDim, floatingLayer: _floatingLayer),
+  ];
 
   List<NavigationDestination> get _navDestinations => const [
-    NavigationDestination(
-      icon: Icon(Icons.dashboard_outlined),
-      selectedIcon: Icon(Icons.dashboard),
-      label: 'Dashboard',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.history),
-      selectedIcon: Icon(Icons.history),
-      label: 'Activity',
-    ),
-  ];
+        NavigationDestination(
+          icon: Icon(Icons.dashboard_outlined),
+          selectedIcon: Icon(Icons.dashboard),
+          label: 'Dashboard',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.history),
+          selectedIcon: Icon(Icons.history),
+          label: 'Activity',
+        ),
+      ];
 
   List<NavigationRailDestination> get _railDestinations => const [
-    NavigationRailDestination(
-      icon: Icon(Icons.dashboard_outlined),
-      selectedIcon: Icon(Icons.dashboard),
-      label: Text('Dashboard'),
-    ),
-    NavigationRailDestination(
-      icon: Icon(Icons.history),
-      selectedIcon: Icon(Icons.history),
-      label: Text('Activity'),
-    ),
-  ];
+        NavigationRailDestination(
+          icon: Icon(Icons.dashboard_outlined),
+          selectedIcon: Icon(Icons.dashboard),
+          label: Text('Dashboard'),
+        ),
+        NavigationRailDestination(
+          icon: Icon(Icons.history),
+          selectedIcon: Icon(Icons.history),
+          label: Text('Activity'),
+        ),
+      ];
 
   @override
   Widget build(BuildContext context) {
@@ -130,50 +138,80 @@ class _RootNavState extends State<RootNav> {
         if (constraints.maxWidth >= 1100) {
           // Desktop: extended rail with header
           return Scaffold(
-            body: Row(
+            body: Stack(
               children: [
-                SafeArea(
-                  child: FrostedWrap(
-                    child: NavigationRail(
-                      extended: true,
-                      backgroundColor: Colors.transparent,
-                      leading: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                        child: Row(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(10),
-                              child: Image.asset(
-                                'assets/icons/app_icon_dark.png',
-                                width: 44,
-                                height: 44,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stack) =>
-                                    const Icon(
+                Row(
+                  children: [
+                    SafeArea(
+                      child: FrostedWrap(
+                        child: NavigationRail(
+                          extended: true,
+                          backgroundColor: Colors.transparent,
+                          leading: Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                            child: Row(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Image.asset(
+                                    'assets/icons/app_icon_dark.png',
+                                    width: 44,
+                                    height: 44,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stack) =>
+                                        const Icon(
                                       Icons.health_and_safety,
                                       size: 24,
                                     ),
-                              ),
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Text(
+                                  'HealthVerse',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleLarge
+                                      ?.copyWith(fontWeight: FontWeight.w700),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 10),
-                            Text(
-                              'HealthVerse',
-                              style: Theme.of(context).textTheme.titleLarge
-                                  ?.copyWith(fontWeight: FontWeight.w700),
-                            ),
-                          ],
+                          ),
+                          selectedIndex: _currentIndex,
+                          onDestinationSelected: (i) {
+                            _globalDim.value = false;
+                            setState(() => _currentIndex = i);
+                          },
+                          labelType: NavigationRailLabelType.none,
+                          destinations: _railDestinations,
                         ),
                       ),
-                      selectedIndex: _currentIndex,
-                      onDestinationSelected: (i) =>
-                          setState(() => _currentIndex = i),
-                      labelType: NavigationRailLabelType.none,
-                      destinations: _railDestinations,
                     ),
-                  ),
+                    const VerticalDivider(width: 1),
+                    Expanded(child: _screens[_currentIndex]),
+                  ],
                 ),
-                const VerticalDivider(width: 1),
-                Expanded(child: _screens[_currentIndex]),
+                ValueListenableBuilder<bool>(
+                  valueListenable: _globalDim,
+                  builder: (context, dim, _) {
+                    if (!dim) return const SizedBox.shrink();
+                    final colorScheme = Theme.of(context).colorScheme;
+                    return Positioned.fill(
+                      child: GestureDetector(
+                        onTap: () => _globalDim.value = false,
+                        child: Container(
+                          color: colorScheme.scrim.withValues(alpha: 0.35),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                ValueListenableBuilder<Widget?>(
+                  valueListenable: _floatingLayer,
+                  builder: (context, child, _) => child == null
+                      ? const SizedBox.shrink()
+                      : Positioned.fill(
+                          child: IgnorePointer(ignoring: false, child: child)),
+                ),
               ],
             ),
           );
@@ -189,37 +227,98 @@ class _RootNavState extends State<RootNav> {
 
   Widget _buildBottomScaffold(BuildContext context) {
     return Scaffold(
-      body: _screens[_currentIndex],
-      bottomNavigationBar: FrostedWrap(
-        child: NavigationBar(
-          backgroundColor: Colors.transparent,
-          selectedIndex: _currentIndex,
-          onDestinationSelected: (i) => setState(() => _currentIndex = i),
-          destinations: _navDestinations,
-        ),
+      extendBody: true,
+      body: Stack(
+        children: [
+          _screens[_currentIndex],
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: SafeArea(
+              top: false,
+              child: FrostedWrap(
+                child: NavigationBar(
+                  backgroundColor: Colors.transparent,
+                  selectedIndex: _currentIndex,
+                  onDestinationSelected: (i) {
+                    _globalDim.value = false;
+                    setState(() => _currentIndex = i);
+                  },
+                  destinations: _navDestinations,
+                ),
+              ),
+            ),
+          ),
+          ValueListenableBuilder<bool>(
+            valueListenable: _globalDim,
+            builder: (context, dim, _) {
+              if (!dim) return const SizedBox.shrink();
+              final colorScheme = Theme.of(context).colorScheme;
+              return Positioned.fill(
+                child: GestureDetector(
+                  onTap: () => _globalDim.value = false,
+                  child: Container(
+                    color: colorScheme.scrim.withValues(alpha: 0.35),
+                  ),
+                ),
+              );
+            },
+          ),
+          ValueListenableBuilder<Widget?>(
+            valueListenable: _floatingLayer,
+            builder: (context, child, _) => child ?? const SizedBox.shrink(),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildRailScaffold(BuildContext context, {required bool extended}) {
     return Scaffold(
-      body: Row(
+      body: Stack(
         children: [
-          SafeArea(
-            child: FrostedWrap(
-              child: NavigationRail(
-                extended: extended,
-                selectedIndex: _currentIndex,
-                onDestinationSelected: (i) => setState(() => _currentIndex = i),
-                labelType: extended
-                    ? NavigationRailLabelType.none
-                    : NavigationRailLabelType.all,
-                destinations: _railDestinations,
+          Row(
+            children: [
+              SafeArea(
+                child: FrostedWrap(
+                  child: NavigationRail(
+                    extended: extended,
+                    selectedIndex: _currentIndex,
+                    onDestinationSelected: (i) {
+                      _globalDim.value = false;
+                      setState(() => _currentIndex = i);
+                    },
+                    labelType: extended
+                        ? NavigationRailLabelType.none
+                        : NavigationRailLabelType.all,
+                    destinations: _railDestinations,
+                  ),
+                ),
               ),
-            ),
+              const VerticalDivider(width: 1),
+              Expanded(child: _screens[_currentIndex]),
+            ],
           ),
-          const VerticalDivider(width: 1),
-          Expanded(child: _screens[_currentIndex]),
+          ValueListenableBuilder<bool>(
+            valueListenable: _globalDim,
+            builder: (context, dim, _) {
+              if (!dim) return const SizedBox.shrink();
+              final colorScheme = Theme.of(context).colorScheme;
+              return Positioned.fill(
+                child: GestureDetector(
+                  onTap: () => _globalDim.value = false,
+                  child: Container(
+                    color: colorScheme.scrim.withValues(alpha: 0.35),
+                  ),
+                ),
+              );
+            },
+          ),
+          ValueListenableBuilder<Widget?>(
+            valueListenable: _floatingLayer,
+            builder: (context, child, _) => child ?? const SizedBox.shrink(),
+          ),
         ],
       ),
     );

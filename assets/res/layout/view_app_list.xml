@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView android:id="@id/container" android:clickable="true" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginBottom="@dimen/container_margin_bottom" android:layout_marginHorizontal="@dimen/container_margin_horizontal" app:cardBackgroundColor="?colorSurfaceContainer" style="@style/Widget.Material3.CardView.Outlined"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <RelativeLayout android:layout_width="fill_parent" android:layout_height="wrap_content" android:paddingStart="6.0dip" android:paddingEnd="16.0dip">
+        <ImageView android:id="@id/app_icon" android:layout_width="48.0dip" android:layout_height="48.0dip" android:layout_centerVertical="true" android:contentDescription="@android:string/untitled" android:layout_marginStart="16.0dip" android:layout_alignParentStart="true" android:layout_marginVertical="16.0dip" />
+        <LinearLayout android:orientation="vertical" android:id="@id/text_container" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="16.0dip" android:layout_centerVertical="true" android:layout_toStartOf="@id/icon" android:layout_toEndOf="@id/app_icon">
+            <com.google.android.material.textview.MaterialTextView android:textColor="?colorOnSurface" android:layout_gravity="start|center" android:id="@id/title" android:layout_width="wrap_content" android:layout_height="wrap_content" style="?textAppearanceTitleSmall" />
+            <com.google.android.material.textview.MaterialTextView android:textColor="?colorOnSurface" android:layout_gravity="start|center" android:id="@id/summary" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2.0dip" android:alpha="0.8" style="?textAppearanceBodySmall" />
+        </LinearLayout>
+        <ImageView android:id="@id/icon" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/ic_checked_outline" android:layout_centerVertical="true" android:contentDescription="@android:string/untitled" android:alpha="0.2" android:layout_alignParentEnd="true" app:tint="?colorOnSurface" />
+    </RelativeLayout>
+</com.google.android.material.card.MaterialCardView>

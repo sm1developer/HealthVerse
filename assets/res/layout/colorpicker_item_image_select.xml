@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout android:layout_width="fill_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <me.jfenn.colorpickerdialog.views.RoundedSquareImageView android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="4.0dip" android:src="#ff000000" android:tint="?android:textColorPrimary" android:alpha="0.2" />
+    <LinearLayout android:layout_gravity="center_vertical" android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="wrap_content" android:paddingHorizontal="16.0dip">
+        <ImageView android:layout_gravity="center_horizontal" android:layout_width="36.0dip" android:layout_height="36.0dip" android:scaleType="centerInside" android:alpha="0.5" app:srcCompat="@drawable/ic_add_a_photo" />
+        <TextView android:textSize="12.0sp" android:textColor="?android:textColorSecondary" android:gravity="center" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="@string/colorPickerDialog_title_all_photos" android:textAlignment="center" />
+    </LinearLayout>
+</FrameLayout>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout android:clipChildren="false" android:layout_width="fill_parent" android:layout_height="fill_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <androidx.recyclerview.widget.RecyclerView android:id="@id/recyclerView" android:layout_width="fill_parent" android:layout_height="fill_parent" app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+    <com.google.android.material.floatingactionbutton.FloatingActionButton android:layout_gravity="end|bottom" android:id="@id/add_style" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="12.0dip" android:contentDescription="@string/save_current_style" android:layout_marginEnd="16.0dip" app:layout_behavior="com.google.android.material.behavior.HideBottomViewOnScrollBehavior" app:srcCompat="@drawable/ic_add" app:tint="?colorOnTertiaryContainer" style="?floatingActionButtonTertiaryStyle" />
+    <include android:id="@id/header" layout="@layout/view_toolbar" />
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

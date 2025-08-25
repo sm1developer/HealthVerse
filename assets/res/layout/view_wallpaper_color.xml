@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:gravity="center" android:layout_gravity="center" android:orientation="vertical" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_margin="12.0dip"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <com.drdisagree.colorblendr.ui.views.ColorPreview android:layout_gravity="center" android:id="@id/color_container" android:layout_width="48.0dip" android:layout_height="48.0dip" />
+    <com.google.android.material.textview.MaterialTextView android:textColor="?colorOnBackground" android:layout_gravity="center" android:id="@id/title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="6.0dip" android:alpha="0.8" android:textAlignment="center" style="?textAppearanceBodySmall" />
+</LinearLayout>

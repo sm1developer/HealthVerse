@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Fallback background for API < 31 when dynamic colors are not available -->
+    <color name="ic_launcher_bg_fallback">#000000</color>
+</resources>
+
+

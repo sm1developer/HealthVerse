@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="#000000" />
-</shape>
-
-
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- API < 31 fallback: static brand color or black -->
+    <item android:drawable="@color/ic_launcher_bg_fallback"/>
+</selector>

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout android:orientation="vertical" android:background="?selectableItemBackgroundBorderless" android:layout_width="fill_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <me.jfenn.colorpickerdialog.views.SelectableCircleColorView android:id="@id/color" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="8.0dip" />
+</FrameLayout>

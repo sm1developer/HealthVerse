@@ -14,9 +14,15 @@ import '../state/water_store.dart';
 import '../models/water_log.dart';
 import '../state/food_store.dart';
 import '../models/food_log.dart';
+import 'track_sleep_screen.dart';
+import '../state/sleep_store.dart';
+import '../models/sleep_log.dart';
 
 class ActivityScreen extends StatefulWidget {
-  const ActivityScreen({super.key});
+  const ActivityScreen({super.key, this.dimmer, this.floatingLayer});
+
+  final ValueNotifier<bool>? dimmer;
+  final ValueNotifier<Widget?>? floatingLayer;
 
   @override
   State<ActivityScreen> createState() => _ActivityScreenState();
@@ -24,6 +30,7 @@ class ActivityScreen extends StatefulWidget {
 
 class _ActivityScreenState extends State<ActivityScreen> {
   bool? _expanded = false;
+  VoidCallback? _dimmerSub;
 
   Future<void> _onActionSelected(String action) async {
     if (!mounted) return;
@@ -34,9 +41,8 @@ class _ActivityScreenState extends State<ActivityScreen> {
         if (!(status.isGranted || status.isLimited)) {
           if (!mounted) return;
           final double screenWidth = MediaQuery.sizeOf(context).width;
-          final double hMargin = screenWidth > 392
-              ? (screenWidth - 360) / 2
-              : 16;
+          final double hMargin =
+              screenWidth > 392 ? (screenWidth - 360) / 2 : 16;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: const Text('Permission required to track workouts.'),
@@ -58,23 +64,40 @@ class _ActivityScreenState extends State<ActivityScreen> {
         context,
       ).push(MaterialPageRoute(builder: (_) => const TrackWorkoutScreen()));
       if (!mounted) return;
-      setState(() {});
+      setState(() {}); // Refresh list to reflect newly saved workout
       return;
     }
     if (action == 'Log Water') {
       setState(() => _expanded = false);
+      widget.dimmer?.value = false;
       if (!mounted) return;
       await Navigator.of(
         context,
       ).push(MaterialPageRoute(builder: (_) => const LogWaterScreen()));
+      if (!mounted) return;
+      widget.dimmer?.value = false;
       return;
     }
     if (action == 'Log Food') {
       setState(() => _expanded = false);
+      widget.dimmer?.value = false;
       if (!mounted) return;
       await Navigator.of(
         context,
       ).push(MaterialPageRoute(builder: (_) => const LogFoodScreen()));
+      if (!mounted) return;
+      widget.dimmer?.value = false;
+      return;
+    }
+    if (action == 'Track Sleep') {
+      setState(() => _expanded = false);
+      widget.dimmer?.value = false;
+      if (!mounted) return;
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => const TrackSleepScreen()));
+      if (!mounted) return;
+      widget.dimmer?.value = false;
       return;
     }
     // Other actions placeholder
@@ -96,16 +119,25 @@ class _ActivityScreenState extends State<ActivityScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // One-time subscribe to global dimmer so we can collapse when overlay is cleared
+    _dimmerSub ??= () {
+      if (widget.dimmer?.value == false && _expanded == true) {
+        setState(() => _expanded = false);
+      }
+    };
+    if (widget.dimmer != null) {
+      widget.dimmer!.removeListener(_dimmerSub!);
+      widget.dimmer!.addListener(_dimmerSub!);
+    }
     final EdgeInsets viewPadding = MediaQuery.viewPaddingOf(context);
     const double spacing = 12;
     final bool isExpanded = _expanded == true;
     final colorScheme = Theme.of(context).colorScheme;
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
-    final Color tileBg =
-        (isDark
-                ? colorScheme.surfaceContainerHighest
-                : colorScheme.surfaceContainerHighest)
-            .withValues(alpha: isDark ? 0.25 : 0.6);
+    final Color tileBg = (isDark
+            ? colorScheme.surfaceContainerHighest
+            : colorScheme.surfaceContainerHighest)
+        .withValues(alpha: isDark ? 0.25 : 0.6);
     final Color outline = colorScheme.outlineVariant;
 
     // Taller pill style for menu options
@@ -114,6 +146,106 @@ class _ActivityScreenState extends State<ActivityScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       minimumSize: const Size(0, 56),
     );
+
+    // Build floating layer (FAB + menu) so it can be rendered above the dim overlay
+    final Widget floating = Positioned(
+      right: 16,
+      bottom: 16 +
+          viewPadding.bottom +
+          (MediaQuery.sizeOf(context).width < 650 ? 90 : 0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            transitionBuilder: (child, anim) {
+              return FadeTransition(
+                opacity: anim,
+                child: SizeTransition(
+                  sizeFactor: anim,
+                  axisAlignment: -1,
+                  child: child,
+                ),
+              );
+            },
+            child: !isExpanded
+                ? const SizedBox.shrink()
+                : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      _StaggeredOption(
+                        delay: 0,
+                        child: FilledButton.tonalIcon(
+                          style: pillStyle,
+                          onPressed: () => _onActionSelected('Track Workout'),
+                          icon: const Icon(Icons.directions_walk),
+                          label: const Text('Track Workout'),
+                        ),
+                      ),
+                      const SizedBox(height: spacing),
+                      _StaggeredOption(
+                        delay: 50,
+                        child: FilledButton.tonalIcon(
+                          style: pillStyle,
+                          onPressed: () => _onActionSelected('Log Food'),
+                          icon: const Icon(Icons.restaurant),
+                          label: const Text('Log Food'),
+                        ),
+                      ),
+                      const SizedBox(height: spacing),
+                      _StaggeredOption(
+                        delay: 100,
+                        child: FilledButton.tonalIcon(
+                          style: pillStyle,
+                          onPressed: () => _onActionSelected('Track Sleep'),
+                          icon: const Icon(Icons.nightlight_round),
+                          label: const Text('Track Sleep'),
+                        ),
+                      ),
+                      const SizedBox(height: spacing),
+                      _StaggeredOption(
+                        delay: 150,
+                        child: FilledButton.tonalIcon(
+                          style: pillStyle,
+                          onPressed: () => _onActionSelected('Log Water'),
+                          icon: const Icon(Icons.water_drop),
+                          label: const Text('Log Water'),
+                        ),
+                      ),
+                      const SizedBox(height: spacing),
+                    ],
+                  ),
+          ),
+          FloatingActionButton(
+            shape: const CircleBorder(),
+            onPressed: () {
+              final next = !(isExpanded);
+              setState(() => _expanded = next);
+              widget.dimmer?.value = next;
+            },
+            tooltip: isExpanded ? 'Close' : 'Add',
+            child: AnimatedRotation(
+              turns: isExpanded ? 0.125 : 0.0,
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeInOut,
+              child: const Icon(Icons.add),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    // Publish floating layer to root so it renders above global dim overlay
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.floatingLayer?.value = floating;
+    });
+
+    // Ensure floating layer is cleared when screen disposes
+    // (so it doesn't persist if user navigates away)
 
     return Scaffold(
       appBar: AppBar(
@@ -128,99 +260,21 @@ class _ActivityScreenState extends State<ActivityScreen> {
           // Combined activities: workouts and water logs
           _ActivityFeed(tileBg: tileBg, outline: outline),
           // Dim background when menu is expanded and close on tap
-          if (isExpanded)
-            Positioned.fill(
-              child: GestureDetector(
-                onTap: () => setState(() => _expanded = false),
-                child: AnimatedOpacity(
-                  duration: const Duration(milliseconds: 180),
-                  curve: Curves.easeOut,
-                  opacity: 1.0,
-                  child: Container(
-                    color: colorScheme.scrim.withValues(alpha: 0.35),
-                  ),
-                ),
-              ),
-            ),
-          Positioned(
-            right: 16,
-            bottom: 16 + viewPadding.bottom,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                // Staggered animated menu options
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 220),
-                  switchInCurve: Curves.easeOutCubic,
-                  switchOutCurve: Curves.easeInCubic,
-                  transitionBuilder: (child, anim) {
-                    return FadeTransition(
-                      opacity: anim,
-                      child: SizeTransition(
-                        sizeFactor: anim,
-                        axisAlignment: -1,
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: !isExpanded
-                      ? const SizedBox.shrink()
-                      : Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            _StaggeredOption(
-                              delay: 0,
-                              child: FilledButton.tonalIcon(
-                                style: pillStyle,
-                                onPressed: () =>
-                                    _onActionSelected('Track Workout'),
-                                icon: const Icon(Icons.directions_walk),
-                                label: const Text('Track Workout'),
-                              ),
-                            ),
-                            const SizedBox(height: spacing),
-                            _StaggeredOption(
-                              delay: 50,
-                              child: FilledButton.tonalIcon(
-                                style: pillStyle,
-                                onPressed: () => _onActionSelected('Log Food'),
-                                icon: const Icon(Icons.restaurant),
-                                label: const Text('Log Food'),
-                              ),
-                            ),
-                            const SizedBox(height: spacing),
-                            _StaggeredOption(
-                              delay: 100,
-                              child: FilledButton.tonalIcon(
-                                style: pillStyle,
-                                onPressed: () => _onActionSelected('Log Water'),
-                                icon: const Icon(Icons.water_drop),
-                                label: const Text('Log Water'),
-                              ),
-                            ),
-                            const SizedBox(height: spacing),
-                          ],
-                        ),
-                ),
-                FloatingActionButton(
-                  shape: const CircleBorder(),
-                  onPressed: () => setState(() => _expanded = !(isExpanded)),
-                  tooltip: isExpanded ? 'Close' : 'Add',
-                  child: AnimatedRotation(
-                    turns: isExpanded ? 0.125 : 0.0,
-                    duration: const Duration(milliseconds: 180),
-                    curve: Curves.easeInOut,
-                    child: const Icon(Icons.add),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          // Removed local overlay; using global dimmer from RootNav
+          // Floating layer is published to root; nothing else here
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    if (_dimmerSub != null && widget.dimmer != null) {
+      widget.dimmer!.removeListener(_dimmerSub!);
+    }
+    widget.floatingLayer?.value = null;
+    widget.dimmer?.value = false;
+    super.dispose();
   }
 }
 
@@ -272,32 +326,43 @@ class _StaggeredOptionState extends State<_StaggeredOption> {
 
 class _ActivityItem {
   _ActivityItem.workout(Workout w)
-    : workout = w,
-      water = null,
-      food = null,
-      type = _ActivityType.workout,
-      time = w.startedAt;
+      : workout = w,
+        water = null,
+        food = null,
+        sleep = null,
+        type = _ActivityType.workout,
+        time = w.startedAt;
   _ActivityItem.water(WaterLog l)
-    : water = l,
-      workout = null,
-      food = null,
-      type = _ActivityType.water,
-      time = l.loggedAt;
+      : water = l,
+        workout = null,
+        food = null,
+        sleep = null,
+        type = _ActivityType.water,
+        time = l.loggedAt;
   _ActivityItem.food(FoodLog f)
-    : food = f,
-      workout = null,
-      water = null,
-      type = _ActivityType.food,
-      time = f.loggedAt;
+      : food = f,
+        workout = null,
+        water = null,
+        sleep = null,
+        type = _ActivityType.food,
+        time = f.loggedAt;
+  _ActivityItem.sleep(SleepLog s)
+      : sleep = s,
+        workout = null,
+        water = null,
+        food = null,
+        type = _ActivityType.sleep,
+        time = s.endTime;
 
   final _ActivityType type;
   final Workout? workout;
   final WaterLog? water;
   final FoodLog? food;
+  final SleepLog? sleep;
   final DateTime time;
 }
 
-enum _ActivityType { workout, water, food }
+enum _ActivityType { workout, water, food, sleep }
 
 class _ActivityFeed extends StatelessWidget {
   const _ActivityFeed({required this.tileBg, required this.outline});
@@ -319,125 +384,176 @@ class _ActivityFeed extends StatelessWidget {
             return ValueListenableBuilder(
               valueListenable: listenableFood,
               builder: (context, Box<FoodLog> foodBox, ___) {
-                final List<_ActivityItem> items = <_ActivityItem>[
-                  ...wBox.values.toList().cast<Workout>().map(
-                    (w) => _ActivityItem.workout(w),
-                  ),
-                  ...waterBox.values.toList().cast<WaterLog>().map(
-                    (l) => _ActivityItem.water(l),
-                  ),
-                  ...foodBox.values.toList().cast<FoodLog>().map(
-                    (f) => _ActivityItem.food(f),
-                  ),
-                ]..sort((a, b) => b.time.compareTo(a.time));
+                final listenableSleep = SleepStore.instance.listenable!;
+                return ValueListenableBuilder(
+                  valueListenable: listenableSleep,
+                  builder: (context, Box<SleepLog> sleepBox, ____) {
+                    final List<_ActivityItem> items = <_ActivityItem>[
+                      ...wBox.values.toList().cast<Workout>().map(
+                            (w) => _ActivityItem.workout(w),
+                          ),
+                      ...waterBox.values.toList().cast<WaterLog>().map(
+                            (l) => _ActivityItem.water(l),
+                          ),
+                      ...foodBox.values.toList().cast<FoodLog>().map(
+                            (f) => _ActivityItem.food(f),
+                          ),
+                      ...sleepBox.values.toList().cast<SleepLog>().map(
+                            (s) => _ActivityItem.sleep(s),
+                          ),
+                    ]..sort((a, b) => b.time.compareTo(a.time));
 
-                return ListView.builder(
-                  padding: const EdgeInsets.only(
-                    bottom: 120,
-                    left: 16,
-                    right: 16,
-                    top: 8,
-                  ),
-                  itemCount: items.length,
-                  itemBuilder: (context, index) {
-                    final _ActivityItem item = items[index];
-                    if (item.type == _ActivityType.workout) {
-                      final Workout w = item.workout!;
-                      final String hh = w.elapsed.inHours.toString().padLeft(
-                        2,
-                        '0',
-                      );
-                      final String mm = w.elapsed.inMinutes
-                          .remainder(60)
-                          .toString()
-                          .padLeft(2, '0');
-                      final String ss = w.elapsed.inSeconds
-                          .remainder(60)
-                          .toString()
-                          .padLeft(2, '0');
-                      final DateTime dt = w.startedAt;
-                      final int rawH = dt.hour % 12;
-                      final int hr12 = rawH == 0 ? 12 : rawH;
-                      final String min = dt.minute.toString().padLeft(2, '0');
-                      final String meridiem = dt.hour < 12 ? 'AM' : 'PM';
-                      final String time12 =
-                          '${hr12.toString().padLeft(2, '0')}:$min $meridiem';
-                      return Card(
-                        color: tileBg,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          side: BorderSide(
-                            color: outline.withValues(alpha: 0.6),
-                          ),
-                        ),
-                        margin: const EdgeInsets.symmetric(vertical: 6),
-                        child: ListTile(
-                          leading: const Icon(Icons.directions_walk),
-                          title: Text(w.activity),
-                          subtitle: Text(
-                            'Time: $hh:$mm:$ss  •  Steps: ${w.steps}',
-                          ),
-                          trailing: Text(time12),
-                        ),
-                      );
-                    } else if (item.type == _ActivityType.water) {
-                      final WaterLog l = item.water!;
-                      final DateTime dt = l.loggedAt;
-                      final int rawH = dt.hour % 12;
-                      final int hr12 = rawH == 0 ? 12 : rawH;
-                      final String min = dt.minute.toString().padLeft(2, '0');
-                      final String meridiem = dt.hour < 12 ? 'AM' : 'PM';
-                      final String time12 =
-                          '${hr12.toString().padLeft(2, '0')}:$min $meridiem';
-                      return Card(
-                        color: tileBg,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          side: BorderSide(
-                            color: outline.withValues(alpha: 0.6),
-                          ),
-                        ),
-                        margin: const EdgeInsets.symmetric(vertical: 6),
-                        child: ListTile(
-                          leading: const Icon(Icons.water_drop),
-                          title: const Text('Water'),
-                          subtitle: Text('Added: ${l.amountMl} ml'),
-                          trailing: Text(time12),
-                        ),
-                      );
-                    } else {
-                      final FoodLog f = item.food!;
-                      final DateTime dt = f.loggedAt;
-                      final int rawH = dt.hour % 12;
-                      final int hr12 = rawH == 0 ? 12 : rawH;
-                      final String min = dt.minute.toString().padLeft(2, '0');
-                      final String meridiem = dt.hour < 12 ? 'AM' : 'PM';
-                      final String time12 =
-                          '${hr12.toString().padLeft(2, '0')}:$min $meridiem';
-                      return Card(
-                        color: tileBg,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          side: BorderSide(
-                            color: outline.withValues(alpha: 0.6),
-                          ),
-                        ),
-                        margin: const EdgeInsets.symmetric(vertical: 6),
-                        child: ListTile(
-                          leading: const Icon(Icons.restaurant),
-                          title: Text(f.name),
-                          subtitle: Text(
-                            (f.details == null || f.details!.isEmpty)
-                                ? 'Amount: ${f.quantity} ${f.unit}'
-                                : f.details!,
-                          ),
-                          trailing: Text(time12),
-                        ),
-                      );
-                    }
+                    return ListView.builder(
+                      padding: const EdgeInsets.only(
+                        bottom: 120,
+                        left: 16,
+                        right: 16,
+                        top: 8,
+                      ),
+                      itemCount: items.length,
+                      itemBuilder: (context, index) {
+                        final _ActivityItem item = items[index];
+                        if (item.type == _ActivityType.workout) {
+                          final Workout w = item.workout!;
+                          final String hh =
+                              w.elapsed.inHours.toString().padLeft(2, '0');
+                          final String mm = w.elapsed.inMinutes
+                              .remainder(60)
+                              .toString()
+                              .padLeft(2, '0');
+                          final String ss = w.elapsed.inSeconds
+                              .remainder(60)
+                              .toString()
+                              .padLeft(2, '0');
+                          final DateTime dt = w.startedAt;
+                          final int rawH = dt.hour % 12;
+                          final int hr12 = rawH == 0 ? 12 : rawH;
+                          final String min = dt.minute.toString().padLeft(
+                                2,
+                                '0',
+                              );
+                          final String meridiem = dt.hour < 12 ? 'AM' : 'PM';
+                          final String time12 =
+                              '${hr12.toString().padLeft(2, '0')}:$min $meridiem';
+                          return Card(
+                            color: tileBg,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              side: BorderSide(
+                                color: outline.withValues(alpha: 0.6),
+                              ),
+                            ),
+                            margin: const EdgeInsets.symmetric(vertical: 6),
+                            child: ListTile(
+                              leading: const Icon(Icons.directions_walk),
+                              title: Text(w.activity),
+                              subtitle: Text(
+                                'Time: $hh:$mm:$ss  •  Steps: ${w.steps}',
+                              ),
+                              trailing: Text(time12),
+                            ),
+                          );
+                        } else if (item.type == _ActivityType.water) {
+                          final WaterLog l = item.water!;
+                          final DateTime dt = l.loggedAt;
+                          final int rawH = dt.hour % 12;
+                          final int hr12 = rawH == 0 ? 12 : rawH;
+                          final String min = dt.minute.toString().padLeft(
+                                2,
+                                '0',
+                              );
+                          final String meridiem = dt.hour < 12 ? 'AM' : 'PM';
+                          final String time12 =
+                              '${hr12.toString().padLeft(2, '0')}:$min $meridiem';
+                          return Card(
+                            color: tileBg,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              side: BorderSide(
+                                color: outline.withValues(alpha: 0.6),
+                              ),
+                            ),
+                            margin: const EdgeInsets.symmetric(vertical: 6),
+                            child: ListTile(
+                              leading: const Icon(Icons.water_drop),
+                              title: const Text('Water'),
+                              subtitle: Text('Added: ${l.amountMl} ml'),
+                              trailing: Text(time12),
+                            ),
+                          );
+                        } else if (item.type == _ActivityType.food) {
+                          final FoodLog f = item.food!;
+                          final DateTime dt = f.loggedAt;
+                          final int rawH = dt.hour % 12;
+                          final int hr12 = rawH == 0 ? 12 : rawH;
+                          final String min = dt.minute.toString().padLeft(
+                                2,
+                                '0',
+                              );
+                          final String meridiem = dt.hour < 12 ? 'AM' : 'PM';
+                          final String time12 =
+                              '${hr12.toString().padLeft(2, '0')}:$min $meridiem';
+                          return Card(
+                            color: tileBg,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              side: BorderSide(
+                                color: outline.withValues(alpha: 0.6),
+                              ),
+                            ),
+                            margin: const EdgeInsets.symmetric(vertical: 6),
+                            child: ListTile(
+                              leading: const Icon(Icons.restaurant),
+                              title: Text(f.name),
+                              subtitle: Text(
+                                (f.details == null || f.details!.isEmpty)
+                                    ? 'Amount: ${f.quantity} ${f.unit}'
+                                    : f.details!,
+                              ),
+                              trailing: Text(time12),
+                            ),
+                          );
+                        } else {
+                          final SleepLog s = item.sleep!;
+                          final String hh =
+                              s.duration.inHours.toString().padLeft(2, '0');
+                          final String mm = s.duration.inMinutes
+                              .remainder(60)
+                              .toString()
+                              .padLeft(2, '0');
+                          final DateTime dt = s.endTime;
+                          final int rawH = dt.hour % 12;
+                          final int hr12 = rawH == 0 ? 12 : rawH;
+                          final String min = dt.minute.toString().padLeft(
+                                2,
+                                '0',
+                              );
+                          final String meridiem = dt.hour < 12 ? 'AM' : 'PM';
+                          final String time12 =
+                              '${hr12.toString().padLeft(2, '0')}:$min $meridiem';
+                          return Card(
+                            color: tileBg,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              side: BorderSide(
+                                color: outline.withValues(alpha: 0.6),
+                              ),
+                            ),
+                            margin: const EdgeInsets.symmetric(vertical: 6),
+                            child: ListTile(
+                              leading: const Icon(Icons.nightlight_round),
+                              title: const Text('Sleep'),
+                              subtitle: Text('Duration: ${hh}h ${mm}m'),
+                              trailing: Text(time12),
+                            ),
+                          );
+                        }
+                      },
+                    );
                   },
                 );
               },

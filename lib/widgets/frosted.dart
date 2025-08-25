@@ -13,7 +13,7 @@ class FrostedBarBackground extends StatelessWidget {
     return ClipRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
-        child: Container(color: scheme.surface.withOpacity(opacity)),
+        child: Container(color: scheme.surface.withValues(alpha: opacity)),
       ),
     );
   }
@@ -38,7 +38,7 @@ class FrostedWrap extends StatelessWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
         child: ColoredBox(
-          color: scheme.surface.withOpacity(opacity),
+          color: scheme.surface.withValues(alpha: opacity),
           child: child,
         ),
       ),

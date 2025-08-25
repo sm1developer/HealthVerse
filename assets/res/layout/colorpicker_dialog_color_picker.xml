@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView android:layout_width="fill_parent" android:layout_height="wrap_content" app:cardBackgroundColor="?colorSurface" app:cardCornerRadius="8.0dip" app:strokeWidth="0.0dip"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <FrameLayout android:layout_width="fill_parent" android:layout_height="fill_parent">
+        <LinearLayout android:orientation="vertical" android:id="@id/pickerContent" android:layout_width="fill_parent" android:layout_height="fill_parent" android:layout_marginBottom="64.0dip">
+            <FrameLayout android:layout_width="fill_parent" android:layout_height="wrap_content">
+                <me.jfenn.colorpickerdialog.views.color.HorizontalSmoothColorView android:id="@id/color" android:layout_width="fill_parent" android:layout_height="wrap_content" />
+                <androidx.appcompat.widget.AppCompatEditText android:textSize="24.0sp" android:textColor="@android:color/white" android:layout_gravity="center" android:id="@id/colorHex" android:layout_width="wrap_content" android:layout_height="wrap_content" android:maxLines="1" android:lines="1" android:singleLine="true" android:maxLength="9" android:digits="\#0123456789ABCDEFabcdef" android:inputType="textCapCharacters|textNoSuggestions" android:imeOptions="actionDone" android:textCursorDrawable="@null" />
+            </FrameLayout>
+            <com.google.android.material.tabs.TabLayout android:layout_gravity="center_horizontal" android:id="@id/tabLayout" android:layout_width="fill_parent" android:layout_height="wrap_content" app:tabGravity="fill" app:tabIndicatorColor="?colorPrimary" app:tabIndicatorFullWidth="true" app:tabIndicatorHeight="4.0dip" app:tabMode="fixed" app:tabSelectedTextColor="?colorPrimary" />
+            <me.jfenn.colorpickerdialog.views.HeightableViewPager android:id="@id/slidersPager" android:layout_width="fill_parent" android:layout_height="wrap_content" />
+        </LinearLayout>
+        <LinearLayout android:gravity="end|center" android:layout_gravity="bottom" android:orientation="horizontal" android:id="@id/buttonsContent" android:layout_width="fill_parent" android:layout_height="64.0dip" android:backgroundTint="?android:textColorPrimary" android:paddingHorizontal="16.0dip">
+            <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="?android:textColorPrimary" android:layout_gravity="center_vertical" android:id="@id/cancel" android:background="?selectableItemBackground" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@android:string/cancel" android:textAllCaps="true" android:paddingHorizontal="12.0dip" android:paddingVertical="8.0dip" />
+            <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="?android:textColorPrimary" android:layout_gravity="center_vertical" android:id="@id/confirm" android:background="?selectableItemBackground" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@android:string/ok" android:textAllCaps="true" android:paddingHorizontal="12.0dip" android:paddingVertical="8.0dip" />
+        </LinearLayout>
+    </FrameLayout>
+</com.google.android.material.card.MaterialCardView>
