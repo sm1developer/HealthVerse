@@ -24,4 +24,17 @@ class WaterStore {
   Future<void> add(WaterLog log) async {
     await _box?.add(log);
   }
+
+  Future<bool> delete(WaterLog log) async {
+    if (_box == null) return false;
+    final Box<WaterLog> box = _box!;
+    for (final key in box.keys) {
+      final value = box.get(key);
+      if (identical(value, log) || value == log) {
+        await box.delete(key);
+        return true;
+      }
+    }
+    return false;
+  }
 }

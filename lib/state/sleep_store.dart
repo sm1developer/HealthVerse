@@ -24,4 +24,17 @@ class SleepStore {
   Future<void> add(SleepLog log) async {
     await _box?.add(log);
   }
+
+  Future<bool> delete(SleepLog log) async {
+    if (_box == null) return false;
+    final Box<SleepLog> box = _box!;
+    for (final key in box.keys) {
+      final value = box.get(key);
+      if (identical(value, log) || value == log) {
+        await box.delete(key);
+        return true;
+      }
+    }
+    return false;
+  }
 }

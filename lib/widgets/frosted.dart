@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 
 class FrostedBarBackground extends StatelessWidget {
-  const FrostedBarBackground({super.key, this.opacity = 0.1, this.sigma = 18});
+  const FrostedBarBackground({super.key, this.opacity = 0.6, this.sigma = 18});
 
   final double opacity;
   final double sigma;
@@ -23,7 +23,7 @@ class FrostedWrap extends StatelessWidget {
   const FrostedWrap({
     super.key,
     required this.child,
-    this.opacity = 0.1,
+    this.opacity = 0.6,
     this.sigma = 18,
   });
 

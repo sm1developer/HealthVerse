@@ -33,6 +33,7 @@
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:enableOnBackInvokedCallback="true"
         android:hardwareAccelerated="true"
+        android:resizeableActivity="true"
         android:largeHeap="false"
         android:usesCleartextTraffic="false"
         android:requestLegacyExternalStorage="false">
@@ -40,10 +41,12 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:launchMode="singleTop"
+            android:launchMode="singleTask"
             android:theme="@style/LaunchTheme"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
+            android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
             android:windowSoftInputMode="adjustResize"
             android:screenOrientation="portrait"
             android:excludeFromRecents="false"

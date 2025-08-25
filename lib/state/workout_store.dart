@@ -24,4 +24,17 @@ class WorkoutStore {
   void add(Workout workout) {
     _box?.add(workout);
   }
+
+  Future<bool> delete(Workout workout) async {
+    if (_box == null) return false;
+    final Box<Workout> box = _box!;
+    for (final key in box.keys) {
+      final value = box.get(key);
+      if (identical(value, workout) || value == workout) {
+        await box.delete(key);
+        return true;
+      }
+    }
+    return false;
+  }
 }

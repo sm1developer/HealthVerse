@@ -66,7 +66,13 @@ class DashboardScreen extends StatelessWidget {
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(12, 8, 12, 20),
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.fromLTRB(
+          12,
+          8,
+          12,
+          20 + MediaQuery.viewPaddingOf(context).bottom + 80,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -223,20 +229,33 @@ class _MetricCard extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(
-                    primaryValue,
-                    style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: onColor,
-                        ),
+                  Flexible(
+                    fit: FlexFit.loose,
+                    child: Text(
+                      primaryValue,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: onColor,
+                          ),
+                    ),
                   ),
                   if (secondary != null) ...[
                     const SizedBox(width: 6),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 5),
-                      child: Text(
-                        secondary!,
-                        style: TextStyle(color: onColor.withValues(alpha: 0.9)),
+                    Flexible(
+                      fit: FlexFit.tight,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 5),
+                        child: Text(
+                          secondary!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          softWrap: false,
+                          textAlign: TextAlign.start,
+                          style:
+                              TextStyle(color: onColor.withValues(alpha: 0.9)),
+                        ),
                       ),
                     ),
                   ],

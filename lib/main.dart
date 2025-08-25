@@ -179,6 +179,7 @@ class _RootNavState extends State<RootNav> {
                           selectedIndex: _currentIndex,
                           onDestinationSelected: (i) {
                             _globalDim.value = false;
+                            _floatingLayer.value = null;
                             setState(() => _currentIndex = i);
                           },
                           labelType: NavigationRailLabelType.none,
@@ -227,29 +228,10 @@ class _RootNavState extends State<RootNav> {
 
   Widget _buildBottomScaffold(BuildContext context) {
     return Scaffold(
-      extendBody: true,
       body: Stack(
         children: [
           _screens[_currentIndex],
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: SafeArea(
-              top: false,
-              child: FrostedWrap(
-                child: NavigationBar(
-                  backgroundColor: Colors.transparent,
-                  selectedIndex: _currentIndex,
-                  onDestinationSelected: (i) {
-                    _globalDim.value = false;
-                    setState(() => _currentIndex = i);
-                  },
-                  destinations: _navDestinations,
-                ),
-              ),
-            ),
-          ),
+          // Global dim overlay between content and floating layer
           ValueListenableBuilder<bool>(
             valueListenable: _globalDim,
             builder: (context, dim, _) {
@@ -265,11 +247,27 @@ class _RootNavState extends State<RootNav> {
               );
             },
           ),
+          // Floating layer on top (Activity FAB + menu)
           ValueListenableBuilder<Widget?>(
             valueListenable: _floatingLayer,
             builder: (context, child, _) => child ?? const SizedBox.shrink(),
           ),
         ],
+      ),
+      bottomNavigationBar: FrostedWrap(
+        child: SafeArea(
+          top: false,
+          child: NavigationBar(
+            backgroundColor: Colors.transparent,
+            selectedIndex: _currentIndex,
+            onDestinationSelected: (i) {
+              _globalDim.value = false;
+              _floatingLayer.value = null;
+              setState(() => _currentIndex = i);
+            },
+            destinations: _navDestinations,
+          ),
+        ),
       ),
     );
   }

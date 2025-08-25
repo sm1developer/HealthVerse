@@ -31,6 +31,9 @@ class ActivityScreen extends StatefulWidget {
 class _ActivityScreenState extends State<ActivityScreen> {
   bool? _expanded = false;
   VoidCallback? _dimmerSub;
+  bool _selectionMode = false;
+  final Set<String> _selectedIds = <String>{};
+  final Map<String, _ActivityItem> _idToItem = <String, _ActivityItem>{};
 
   Future<void> _onActionSelected(String action) async {
     if (!mounted) return;
@@ -59,11 +62,13 @@ class _ActivityScreenState extends State<ActivityScreen> {
       }
       if (!mounted) return;
       setState(() => _expanded = false);
+      widget.dimmer?.value = false;
       // Navigate and wait
       await Navigator.of(
         context,
       ).push(MaterialPageRoute(builder: (_) => const TrackWorkoutScreen()));
       if (!mounted) return;
+      widget.dimmer?.value = false;
       setState(() {}); // Refresh list to reflect newly saved workout
       return;
     }
@@ -152,7 +157,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
       right: 16,
       bottom: 16 +
           viewPadding.bottom +
-          (MediaQuery.sizeOf(context).width < 650 ? 90 : 0),
+          (MediaQuery.sizeOf(context).width < 650 ? 0 : 0),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -247,22 +252,124 @@ class _ActivityScreenState extends State<ActivityScreen> {
     // Ensure floating layer is cleared when screen disposes
     // (so it doesn't persist if user navigates away)
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Activity'),
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        flexibleSpace: const FrostedBarBackground(),
-      ),
-      body: Stack(
-        children: [
-          // Combined activities: workouts and water logs
-          _ActivityFeed(tileBg: tileBg, outline: outline),
-          // Dim background when menu is expanded and close on tap
-          // Removed local overlay; using global dimmer from RootNav
-          // Floating layer is published to root; nothing else here
-        ],
+    return WillPopScope(
+      onWillPop: () async {
+        if (_selectionMode) {
+          setState(() {
+            _selectionMode = false;
+            _selectedIds.clear();
+          });
+          return false;
+        }
+        return true;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: _selectionMode
+              ? Text('${_selectedIds.length} selected')
+              : const Text('Activity'),
+          backgroundColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+          flexibleSpace: const FrostedBarBackground(),
+          leading: _selectionMode
+              ? IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () {
+                    setState(() {
+                      _selectionMode = false;
+                      _selectedIds.clear();
+                    });
+                  },
+                )
+              : null,
+          actions: _selectionMode
+              ? [
+                  IconButton(
+                    tooltip: 'Delete',
+                    icon: const Icon(Icons.delete_outline),
+                    onPressed: _selectedIds.isEmpty
+                        ? null
+                        : () async {
+                            final bool? confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (ctx) {
+                                return AlertDialog(
+                                  title: Text(
+                                      'Delete ${_selectedIds.length} item(s)?'),
+                                  content: const Text(
+                                      'This action cannot be undone.'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.of(ctx).pop(false),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    FilledButton.tonal(
+                                      onPressed: () =>
+                                          Navigator.of(ctx).pop(true),
+                                      child: const Text('Delete'),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                            if (confirm == true) {
+                              final List<String> ids = _selectedIds.toList();
+                              for (final id in ids) {
+                                final _ActivityItem? item = _idToItem[id];
+                                if (item == null) continue;
+                                if (item.type == _ActivityType.workout) {
+                                  await WorkoutStore.instance
+                                      .delete(item.workout!);
+                                } else if (item.type == _ActivityType.water) {
+                                  await WaterStore.instance.delete(item.water!);
+                                } else if (item.type == _ActivityType.food) {
+                                  await FoodStore.instance.delete(item.food!);
+                                } else if (item.type == _ActivityType.sleep) {
+                                  await SleepStore.instance.delete(item.sleep!);
+                                }
+                              }
+                              if (!mounted) return;
+                              setState(() {
+                                _selectedIds.clear();
+                                _selectionMode = false;
+                              });
+                            }
+                          },
+                  ),
+                  const SizedBox(width: 8),
+                ]
+              : null,
+        ),
+        body: Stack(
+          children: [
+            // Combined activities: workouts and water logs
+            _ActivityFeed(
+              tileBg: tileBg,
+              outline: outline,
+              selectionMode: _selectionMode,
+              selectedIds: _selectedIds,
+              onToggleSelect: (id, item) {
+                setState(() {
+                  _idToItem[id] = item;
+                  if (!_selectionMode) {
+                    _selectionMode = true;
+                  }
+                  if (_selectedIds.contains(id)) {
+                    _selectedIds.remove(id);
+                    if (_selectedIds.isEmpty) _selectionMode = false;
+                  } else {
+                    _selectedIds.add(id);
+                  }
+                });
+              },
+            ),
+            // Dim background when menu is expanded and close on tap
+            // Removed local overlay; using global dimmer from RootNav
+            // Floating layer is published to root; nothing else here
+          ],
+        ),
       ),
     );
   }
@@ -365,10 +472,19 @@ class _ActivityItem {
 enum _ActivityType { workout, water, food, sleep }
 
 class _ActivityFeed extends StatelessWidget {
-  const _ActivityFeed({required this.tileBg, required this.outline});
+  const _ActivityFeed({
+    required this.tileBg,
+    required this.outline,
+    this.selectionMode = false,
+    this.selectedIds,
+    this.onToggleSelect,
+  });
 
   final Color tileBg;
   final Color outline;
+  final bool selectionMode;
+  final Set<String>? selectedIds;
+  final void Function(String id, _ActivityItem item)? onToggleSelect;
 
   @override
   Widget build(BuildContext context) {
@@ -435,23 +551,35 @@ class _ActivityFeed extends StatelessWidget {
                           final String meridiem = dt.hour < 12 ? 'AM' : 'PM';
                           final String time12 =
                               '${hr12.toString().padLeft(2, '0')}:$min $meridiem';
-                          return Card(
-                            color: tileBg,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              side: BorderSide(
-                                color: outline.withValues(alpha: 0.6),
+                          final String id =
+                              'w_${w.startedAt.millisecondsSinceEpoch}';
+                          final bool isSelected =
+                              selectedIds?.contains(id) == true;
+                          return GestureDetector(
+                            onLongPress: () => onToggleSelect?.call(id, item),
+                            onTap: selectionMode
+                                ? () => onToggleSelect?.call(id, item)
+                                : null,
+                            child: Card(
+                              color: tileBg,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                side: BorderSide(
+                                  color: isSelected
+                                      ? Theme.of(context).colorScheme.primary
+                                      : outline.withValues(alpha: 0.6),
+                                ),
                               ),
-                            ),
-                            margin: const EdgeInsets.symmetric(vertical: 6),
-                            child: ListTile(
-                              leading: const Icon(Icons.directions_walk),
-                              title: Text(w.activity),
-                              subtitle: Text(
-                                'Time: $hh:$mm:$ss  •  Steps: ${w.steps}',
+                              margin: const EdgeInsets.symmetric(vertical: 6),
+                              child: ListTile(
+                                leading: const Icon(Icons.directions_walk),
+                                title: Text(w.activity),
+                                subtitle: Text(
+                                  'Time: $hh:$mm:$ss  •  Steps: ${w.steps}',
+                                ),
+                                trailing: Text(time12),
                               ),
-                              trailing: Text(time12),
                             ),
                           );
                         } else if (item.type == _ActivityType.water) {
@@ -466,21 +594,33 @@ class _ActivityFeed extends StatelessWidget {
                           final String meridiem = dt.hour < 12 ? 'AM' : 'PM';
                           final String time12 =
                               '${hr12.toString().padLeft(2, '0')}:$min $meridiem';
-                          return Card(
-                            color: tileBg,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              side: BorderSide(
-                                color: outline.withValues(alpha: 0.6),
+                          final String id =
+                              'wa_${l.loggedAt.millisecondsSinceEpoch}_${l.amountMl}';
+                          final bool isSelected =
+                              selectedIds?.contains(id) == true;
+                          return GestureDetector(
+                            onLongPress: () => onToggleSelect?.call(id, item),
+                            onTap: selectionMode
+                                ? () => onToggleSelect?.call(id, item)
+                                : null,
+                            child: Card(
+                              color: tileBg,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                side: BorderSide(
+                                  color: isSelected
+                                      ? Theme.of(context).colorScheme.primary
+                                      : outline.withValues(alpha: 0.6),
+                                ),
                               ),
-                            ),
-                            margin: const EdgeInsets.symmetric(vertical: 6),
-                            child: ListTile(
-                              leading: const Icon(Icons.water_drop),
-                              title: const Text('Water'),
-                              subtitle: Text('Added: ${l.amountMl} ml'),
-                              trailing: Text(time12),
+                              margin: const EdgeInsets.symmetric(vertical: 6),
+                              child: ListTile(
+                                leading: const Icon(Icons.water_drop),
+                                title: const Text('Water'),
+                                subtitle: Text('Added: ${l.amountMl} ml'),
+                                trailing: Text(time12),
+                              ),
                             ),
                           );
                         } else if (item.type == _ActivityType.food) {
@@ -495,25 +635,37 @@ class _ActivityFeed extends StatelessWidget {
                           final String meridiem = dt.hour < 12 ? 'AM' : 'PM';
                           final String time12 =
                               '${hr12.toString().padLeft(2, '0')}:$min $meridiem';
-                          return Card(
-                            color: tileBg,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              side: BorderSide(
-                                color: outline.withValues(alpha: 0.6),
+                          final String id =
+                              'f_${f.loggedAt.millisecondsSinceEpoch}_${f.name}';
+                          final bool isSelected =
+                              selectedIds?.contains(id) == true;
+                          return GestureDetector(
+                            onLongPress: () => onToggleSelect?.call(id, item),
+                            onTap: selectionMode
+                                ? () => onToggleSelect?.call(id, item)
+                                : null,
+                            child: Card(
+                              color: tileBg,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                side: BorderSide(
+                                  color: isSelected
+                                      ? Theme.of(context).colorScheme.primary
+                                      : outline.withValues(alpha: 0.6),
+                                ),
                               ),
-                            ),
-                            margin: const EdgeInsets.symmetric(vertical: 6),
-                            child: ListTile(
-                              leading: const Icon(Icons.restaurant),
-                              title: Text(f.name),
-                              subtitle: Text(
-                                (f.details == null || f.details!.isEmpty)
-                                    ? 'Amount: ${f.quantity} ${f.unit}'
-                                    : f.details!,
+                              margin: const EdgeInsets.symmetric(vertical: 6),
+                              child: ListTile(
+                                leading: const Icon(Icons.restaurant),
+                                title: Text(f.name),
+                                subtitle: Text(
+                                  (f.details == null || f.details!.isEmpty)
+                                      ? 'Amount: ${f.quantity} ${f.unit}'
+                                      : f.details!,
+                                ),
+                                trailing: Text(time12),
                               ),
-                              trailing: Text(time12),
                             ),
                           );
                         } else {
@@ -534,21 +686,33 @@ class _ActivityFeed extends StatelessWidget {
                           final String meridiem = dt.hour < 12 ? 'AM' : 'PM';
                           final String time12 =
                               '${hr12.toString().padLeft(2, '0')}:$min $meridiem';
-                          return Card(
-                            color: tileBg,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              side: BorderSide(
-                                color: outline.withValues(alpha: 0.6),
+                          final String id =
+                              's_${s.endTime.millisecondsSinceEpoch}_${s.duration.inMinutes}';
+                          final bool isSelected =
+                              selectedIds?.contains(id) == true;
+                          return GestureDetector(
+                            onLongPress: () => onToggleSelect?.call(id, item),
+                            onTap: selectionMode
+                                ? () => onToggleSelect?.call(id, item)
+                                : null,
+                            child: Card(
+                              color: tileBg,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                side: BorderSide(
+                                  color: isSelected
+                                      ? Theme.of(context).colorScheme.primary
+                                      : outline.withValues(alpha: 0.6),
+                                ),
                               ),
-                            ),
-                            margin: const EdgeInsets.symmetric(vertical: 6),
-                            child: ListTile(
-                              leading: const Icon(Icons.nightlight_round),
-                              title: const Text('Sleep'),
-                              subtitle: Text('Duration: ${hh}h ${mm}m'),
-                              trailing: Text(time12),
+                              margin: const EdgeInsets.symmetric(vertical: 6),
+                              child: ListTile(
+                                leading: const Icon(Icons.nightlight_round),
+                                title: const Text('Sleep'),
+                                subtitle: Text('Duration: ${hh}h ${mm}m'),
+                                trailing: Text(time12),
+                              ),
                             ),
                           );
                         }
@@ -561,6 +725,57 @@ class _ActivityFeed extends StatelessWidget {
           },
         );
       },
+    );
+  }
+}
+
+class _ConfirmDeleteSheet extends StatelessWidget {
+  const _ConfirmDeleteSheet({required this.title, required this.subtitle});
+
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return SafeArea(
+      top: false,
+      child: Container(
+        margin: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: scheme.surface,
+          borderRadius: BorderRadius.circular(16),
+          border:
+              Border.all(color: scheme.outlineVariant.withValues(alpha: 0.6)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 6),
+              Text(subtitle, style: Theme.of(context).textTheme.bodyMedium),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: const Text('Cancel'),
+                  ),
+                  const SizedBox(width: 8),
+                  FilledButton.tonal(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    child: const Text('Delete'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
